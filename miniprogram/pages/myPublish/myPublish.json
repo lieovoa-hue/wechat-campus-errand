@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "我的发布",
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "page-footer": "/components/pageFooter/pageFooter",
+    "confirm-dialog": "/components/confirmDialog/confirmDialog",
+    "notice-bar": "/components/noticeBar/noticeBar"
+  }
+}

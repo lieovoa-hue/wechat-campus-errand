@@ -1,0 +1,2 @@
+/* 登录页样式：视觉语言全部来自 styles/auth.wxss，本文件只留页面级微调 */
+@import "../../styles/auth.wxss";

@@ -1,0 +1,71 @@
+<view class="container {{themeClass}} theme-root">
+  <!-- 全局通知条：管理员发布的公告，可关闭（本次会话内不再出现） -->
+  <notice-bar />
+  <!-- 统一确认弹窗（自绘，深色自适应）：由 utils/dialog.js 通过 selectComponent 调用 -->
+  <confirm-dialog id="confirmDialog" />
+  <!-- 当前状态 -->
+  <view class="card">
+    <view class="row-between">
+      <view class="title">校园认证状态</view>
+      <view class="{{isCampusAudit === 2 ? 'tag tag-success' : (isCampusAudit === 3 ? 'tag tag-danger' : 'tag tag-warn')}}">
+        {{statusText}}
+      </view>
+    </view>
+    <view class="sub tips" wx:if="{{isCampusAudit === 2}}">已解锁全部任务发布与接单权限。</view>
+    <view class="sub tips" wx:elif="{{isCampusAudit === 1}}">申请审核中，请耐心等待管理员处理。</view>
+    <view class="sub tips" wx:elif="{{isCampusAudit === 3}}">
+      认证被驳回<text wx:if="{{rejectReason}}">，原因：{{rejectReason}}</text>。
+      已发布的待接单任务保留，进行中的任务可正常完成，但暂时无法发布新任务与接新订单。
+    </view>
+    <view class="sub tips" wx:else>完成认证后可发布任务、接单赚取酬金。</view>
+  </view>
+
+  <!-- 认证表单 -->
+  <view class="card" wx:if="{{isCampusAudit !== 2}}">
+    <view class="title">认证信息（4项必填）</view>
+    <view class="form-item">
+      <view class="form-label">真实姓名</view>
+      <input class="form-input" placeholder="请输入真实姓名" placeholder-class="placeholder"
+             value="{{form.certName}}" data-field="certName" bindinput="onInput" />
+    </view>
+    <view class="form-item">
+      <view class="form-label">真实学号</view>
+      <input class="form-input" placeholder="请输入真实学号" placeholder-class="placeholder"
+             value="{{form.certStudentId}}" data-field="certStudentId" bindinput="onInput" />
+    </view>
+    <view class="form-item">
+      <view class="form-label">联系手机号</view>
+      <input class="form-input" type="number" maxlength="11" placeholder="可联系到的手机号" placeholder-class="placeholder"
+             value="{{form.certPhone}}" data-field="certPhone" bindinput="onInput" />
+    </view>
+    <view class="upload-block">
+      <view class="form-label upload-block-label">校园身份截图</view>
+
+      <!-- 上传规则（红色醒目提示）：截图里必须能看清本人照片、姓名、类别、班级、宿舍、手机号、学号、专业 -->
+      <view class="cert-rule">
+        图片需上传本人在智慧校园中打开身份卡页面，上传截图中需包含的信息有：本人照片、姓名、类别、班级、宿舍、手机号码、登陆账号(学号)、专业名称。
+      </view>
+
+      <!-- 示例图：智慧校园首页 ->「身份卡」，点击可放大查看 -->
+      <view class="cert-guide">
+        <image class="cert-guide-img" src="{{certGuideImg}}" mode="widthFix" bindtap="previewCertGuide" />
+        <view class="cert-guide-tip">示例：打开「智慧校园」→ 点击「身份卡」（点击图片可放大）</view>
+      </view>
+
+      <view class="upload-area">
+        <view class="img-thumb-wrap" wx:if="{{certImgUrl}}">
+          <image class="img-thumb" src="{{certImgUrl}}" mode="aspectFill" bindtap="previewCertImage" />
+          <view class="thumb-del" catchtap="deleteCertImage">×</view>
+        </view>
+        <view wx:else class="upload-box" bindtap="chooseCertImage">+ 上传截图</view>
+        <view class="sub" wx:if="{{certImg}}" style="margin-top:12rpx">点击图片可预览，重新上传请先删除后再选择</view>
+      </view>
+    </view>
+    <view class="sub tips">提示：同一账号7天内最多提交3次认证申请；学号一经认证通过后全局唯一。</view>
+  </view>
+
+  <button class="btn btn-primary submit" wx:if="{{isCampusAudit !== 2}}"
+          loading="{{submitting}}" bindtap="submit">提交认证申请</button>
+  <page-footer />
+  <view class="safe-bottom"></view>
+</view>

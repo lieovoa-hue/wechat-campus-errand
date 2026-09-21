@@ -1,0 +1,123 @@
+/* =====================================================================
+   消息详情（v6）
+   ---------------------------------------------------------------------
+   结构：类型标签 + 标题 + 时间（头卡）→ 正文卡 → 复制按钮
+   设计依据：docs/page-design-v1.md 第 13 页
+   阅读页的主角是正文：字号 30rpx、行高 1.75，长文一屏约 18~20 字，读着不累。
+   ===================================================================== */
+
+.md-page {
+  min-height: 100vh;
+  padding: var(--page-pad);
+  box-sizing: border-box;
+  background: var(--bg);
+}
+
+.md-card {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: var(--sp-5);
+  padding: var(--sp-7) var(--sp-6);
+  background: var(--surface);
+  border-radius: var(--radius-l);
+  box-shadow: var(--shadow-card);
+  animation: md-fade-up var(--dur-slow) var(--ease-out) backwards;
+}
+
+/* ---------------------------------------------------- 头卡：类型标签 / 时间 / 标题 */
+.md-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.md-tag {
+  padding: 2rpx 12rpx;
+  border-radius: var(--radius-s);
+  font-size: var(--fs-cap);
+  line-height: 1.6;
+  color: var(--brand-deep);
+  background: var(--brand-soft);
+}
+
+.md-tag-admin {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.md-tag-task {
+  color: var(--success);
+  background: var(--success-soft);
+}
+
+.md-tag-owner {
+  color: var(--warn);
+  background: var(--warn-soft);
+}
+
+.md-time {
+  font-size: var(--fs-cap);
+  color: var(--text-4);
+}
+
+.md-title {
+  margin-top: var(--sp-4);
+  font-size: var(--fs-title);
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: -.5rpx;
+  color: var(--text-1);
+  word-break: break-all;
+}
+
+.md-sub {
+  margin-top: var(--sp-2);
+  font-size: var(--fs-sm);
+  color: var(--text-3);
+}
+
+/* ---------------------------------------------------- 正文卡 */
+.md-body-card {
+  animation-delay: 0.06s;
+}
+
+.md-body {
+  font-size: var(--fs-lg);
+  line-height: 1.75;
+  color: var(--text-1);
+  word-break: break-all;
+}
+
+/* ---------------------------------------------------- 复制操作（次要按钮） */
+.md-actions {
+  margin-top: var(--sp-6);
+}
+
+.md-btn {
+  height: var(--touch);
+  line-height: var(--touch);
+  text-align: center;
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--brand-deep);
+  background: var(--brand-soft);
+  transition: transform var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
+}
+
+.md-btn-press {
+  transform: scale(.98);
+  background: var(--brand-line);
+}
+
+@keyframes md-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

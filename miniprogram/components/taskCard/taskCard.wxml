@@ -1,0 +1,80 @@
+<!--
+  任务卡片（任务大厅 / 我的发布 / 我的任务 共用）
+  信息层级：送达地址（去哪） > 限时 + 跑腿费（多久 / 多少钱） > 双方身份 > 备注 > 收件人与发布时间
+-->
+<view class="task-card {{accentClass}}" hover-class="task-card-press" hover-stay-time="60" bindtap="onTapCard">
+  <!-- 头部：送达地址是用户最先要看的信息，右上角是状态与申诉角标 -->
+  <view class="tc-head">
+    <!-- 地址 + 任务类型标签：类型标签紧跟地址，扫列表时一眼区分取快递 / 带饭 / 打印 / 代买 -->
+    <view class="tc-head-main">
+      <text class="tc-addr">{{task.deliverAddress}}</text>
+      <view class="tag tag-type {{typeClass}}" wx:if="{{typeText}}">{{typeText}}</view>
+    </view>
+    <view class="tag-group">
+      <!-- 未送达申诉角标：红色，提醒该任务已停止自动确认收货 -->
+      <view class="tag tag-danger" wx:if="{{isDisputed}}">已申诉</view>
+      <view class="{{statusClass}}">{{statusText}}</view>
+    </view>
+  </view>
+
+  <!-- 订单号（GCPT+数字）：每个任务唯一，举报该任务时会一并上报给管理员 -->
+  <view class="tc-order" wx:if="{{task.orderNo}}">订单号 {{task.orderNo}}</view>
+
+  <!-- 关键指标条：限时与酬金并排，金额放大，扫一眼就能决定接不接 -->
+  <view class="tc-metrics">
+    <view class="tc-metric">
+      <text class="tc-metric-k">限时</text>
+      <text class="tc-metric-v">{{limitText}}</text>
+    </view>
+    <view class="tc-metric tc-metric-money">
+      <text class="tc-metric-k">跑腿费</text>
+      <text class="tc-metric-v money">¥{{rewardText}}</text>
+    </view>
+  </view>
+
+  <!-- 发布者：头像 / 昵称 / 账号ID / 学号 / 认证标识 -->
+  <view class="person-row" wx:if="{{ownerPerson}}">
+    <!-- 头像可点开看大图：catchtap 拦住冒泡，避免被整卡的「进入任务详情」抢走 -->
+    <image wx:if="{{ownerPerson.avatarUrl}}" class="person-avatar" src="{{ownerPerson.avatarUrl}}" mode="aspectFill"
+           catchtap="previewAvatar" data-url="{{ownerPerson.avatarUrl}}" />
+    <view wx:else class="person-avatar person-avatar-placeholder">跑</view>
+    <view class="flex-1 person-info">
+      <view class="row">
+        <text class="person-role">{{ownerPerson.label}}</text>
+        <text class="person-name ellipsis">{{ownerPerson.nickname}}</text>
+        <text class="{{ownerPerson.badgeClass}}" wx:if="{{ownerPerson.badgeShow}}">{{ownerPerson.badgeText}}</text>
+      </view>
+      <view class="sub">ID：{{ownerPerson.userIdText}}　学号：{{ownerPerson.studentId}}</view>
+    </view>
+  </view>
+
+  <!-- 接单跑腿员（我的发布视角且已有人接单） -->
+  <view class="person-row" wx:if="{{takerPerson}}">
+    <image wx:if="{{takerPerson.avatarUrl}}" class="person-avatar" src="{{takerPerson.avatarUrl}}" mode="aspectFill"
+           catchtap="previewAvatar" data-url="{{takerPerson.avatarUrl}}" />
+    <view wx:else class="person-avatar person-avatar-placeholder">跑</view>
+    <view class="flex-1 person-info">
+      <view class="row">
+        <text class="person-role">{{takerPerson.label}}</text>
+        <text class="person-name ellipsis">{{takerPerson.nickname}}</text>
+        <text class="{{takerPerson.badgeClass}}" wx:if="{{takerPerson.badgeShow}}">{{takerPerson.badgeText}}</text>
+      </view>
+      <view class="sub">ID：{{takerPerson.userIdText}}　学号：{{takerPerson.studentId}}</view>
+    </view>
+  </view>
+
+  <!-- 帮带物品：带饭 / 打印 / 代买任务的核心信息，列表上直接可见（取快递任务此项为空，不渲染） -->
+  <view class="task-remark ellipsis" wx:if="{{task.itemName}}">帮带：{{task.itemName}}</view>
+
+  <view class="task-remark ellipsis" wx:if="{{task.remark}}">备注：{{task.remark}}</view>
+
+  <!-- 未送达申诉：该任务已退出「超2小时自动确认收货」判定，需线下协商或管理员介入 -->
+  <view class="sub danger dispute-tip" wx:if="{{isDisputed}}">
+    已反馈未送达：{{disputeReason}}（系统已停止自动确认收货）
+  </view>
+
+  <view class="row-between tc-foot">
+    <view class="sub">收件人：{{task.receiverName}}</view>
+    <view class="sub">{{timeText}}发布</view>
+  </view>
+</view>

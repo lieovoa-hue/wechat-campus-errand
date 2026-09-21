@@ -1,0 +1,2 @@
+/* 忘记密码页样式：视觉语言全部来自 styles/auth.wxss */
+@import "../../styles/auth.wxss";

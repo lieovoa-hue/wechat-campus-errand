@@ -1,0 +1,77 @@
+/* 统一确认弹窗：颜色全部走主题令牌，深色模式下自动跟随（CSS 变量可跨组件继承） */
+.cd-mask {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 60rpx;
+}
+
+.cd-box {
+  width: 100%;
+  max-width: 620rpx;
+  background: var(--surface, #ffffff);
+  border-radius: 24rpx;
+  padding: 44rpx 36rpx 0;
+  box-shadow: 0 24rpx 64rpx rgba(15, 23, 42, 0.22);
+}
+
+.cd-title {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: var(--text-1, #0f172a);
+  text-align: center;
+}
+
+.cd-body {
+  max-height: 46vh;
+  margin-top: 22rpx;
+}
+
+.cd-content {
+  display: block;
+  font-size: 30rpx;
+  line-height: 1.62;
+  color: var(--text-2, #475569);
+  text-align: center;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.cd-actions {
+  display: flex;
+  margin-top: 36rpx;
+  border-top: 1rpx solid var(--line, #e6eaf2);
+}
+
+.cd-btn {
+  flex: 1;
+  height: 100rpx;
+  line-height: 100rpx;
+  text-align: center;
+  font-size: 32rpx;
+  color: var(--text-2, #475569);
+}
+
+.cd-btn-press {
+  background: var(--surface-2, #f1f4f9);
+}
+
+.cd-btn-cancel {
+  border-right: 1rpx solid var(--line, #e6eaf2);
+}
+
+.cd-btn-ok {
+  color: var(--brand, #2b5ce6);
+  font-weight: 600;
+}
+
+.cd-btn-danger {
+  color: var(--danger, #c81e1e);
+}

@@ -1,0 +1,445 @@
+/**
+ * =====================================================================
+ * 登录 / 注册 / 忘记密码 三个页面共用的视觉语言（v6 · iOS / Apple HIG）
+ * ---------------------------------------------------------------------
+ * 设计构思（目标用户：在校学生，诉求「快、清楚、不折腾」）：
+ *   · 第一眼：Logo 用品牌渐变方块做出「这是一个正经产品」的观感，
+ *     标题用 iOS Large Title 的大号黑字 + 负字距，一眼看出这页在做什么；
+ *   · 氛围：页面顶部一层极淡的品牌径向柔光，让白色卡片「浮」起来，
+ *     不用大面积彩色渐变，保证正文对比度不被削弱；
+ *   · 表单：一块白卡 + 无边框输入 + 底部 iOS 分隔线，视线只落在「标签 → 输入」上；
+ *   · 主操作：唯一一颗全宽实心渐变蓝胶囊（带品牌投影），页面里只有它是高饱和色；
+ *   · 次要路径：注册 / 忘记密码收成底部蓝色小字，主次分明。
+ * 颜色一律引用全局 token（app.wxss 的 page 上定义），保证与全站一致，
+ * 辅助文字使用 --text-3 / --text-4，不做「浅到看不清」的灰。
+ * 用法：各页面 wxss 第一行 @import "../../styles/auth.wxss";
+ * =====================================================================
+ */
+
+/* ---------------- 页面底：顶部一层品牌柔光 + 冷灰底 ---------------- */
+.auth-page {
+  position: relative;
+  min-height: 100vh;
+  /* 只做「自上而下逐渐变干净」的氛围，不叠彩色块；正文区始终落在纯白卡上 */
+  background:
+    radial-gradient(140% 50% at 50% 0%, var(--brand-soft) 0%, rgba(238, 243, 255, 0) 70%),
+    var(--bg);
+  padding-bottom: var(--sp-12);
+}
+
+/* ---------------- 顶部品牌区：iOS 大标题（Large Title） ---------------- */
+.auth-hero {
+  position: relative;
+  padding: 88rpx var(--sp-12) var(--sp-6);
+  overflow: hidden;
+}
+
+/* 品牌柔光：只做氛围、不承载信息，放在 Logo 左上角制造一点纵深 */
+.auth-hero::after {
+  content: '';
+  position: absolute;
+  top: -140rpx;
+  left: -100rpx;
+  width: 440rpx;
+  height: 440rpx;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(43, 92, 230, 0.16), rgba(43, 92, 230, 0));
+}
+
+/* Logo：小程序真实品牌图标（PNG 圆形图标，圆形裁切避免白底露角），保留品牌投影 */
+.auth-logo {
+  position: relative;
+  display: block;
+  width: 136rpx;
+  height: 136rpx;
+  border-radius: 50%;
+  box-shadow: var(--shadow-brand);
+}
+
+.auth-title {
+  position: relative;
+  margin-top: var(--sp-8);
+  font-size: var(--fs-h1);
+  font-weight: 700;
+  /* iOS 大标题用负字距：字越大越收紧，观感更紧凑 */
+  letter-spacing: -1rpx;
+  color: var(--text-1);
+}
+
+.auth-subtitle {
+  position: relative;
+  margin-top: var(--sp-3);
+  font-size: var(--fs-sm);
+  letter-spacing: 0.4rpx;
+  color: var(--text-3);
+}
+
+/* ---------------- 表单卡片：白底大圆角，直接落在柔光灰底上 ---------------- */
+.auth-card {
+  position: relative;
+  margin: var(--sp-2) var(--page-pad) 0;
+  padding: var(--sp-4) var(--sp-8) var(--sp-8);
+  background: var(--surface);
+  border-radius: var(--radius-l);
+  box-shadow: var(--shadow-raise);
+  animation: ds-fade-up var(--dur-slow) var(--ease-out) backwards;
+}
+
+.auth-card-title {
+  padding: var(--sp-5) 0 var(--sp-1);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--text-1);
+}
+
+.auth-card-desc {
+  padding-bottom: var(--sp-2);
+  font-size: var(--fs-sm);
+  color: var(--text-3);
+  line-height: 1.6;
+}
+
+/* 单个字段：标签在左、输入在右，底部 iOS 分隔线（112rpx ≈ 56pt，触摸目标充足） */
+.auth-field {
+  display: flex;
+  align-items: center;
+  min-height: 112rpx;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.auth-field:last-of-type,
+.auth-field:last-child {
+  border-bottom: none;
+}
+
+.auth-label {
+  width: 150rpx;
+  flex-shrink: 0;
+  font-size: var(--fs-md);
+  color: var(--text-2);
+}
+
+.auth-input {
+  flex: 1;
+  min-width: 0;
+  height: 112rpx;
+  font-size: var(--fs-md);
+  color: var(--text-1);
+  background: transparent;
+}
+
+.auth-placeholder {
+  color: var(--text-4);
+}
+
+/* 字段下方的说明 / 错误提示 */
+.auth-tip {
+  margin-top: var(--sp-3);
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+  color: var(--text-3);
+}
+
+.auth-tip-danger {
+  color: var(--danger);
+}
+
+.auth-tip-success {
+  color: var(--success);
+}
+
+/* 密保问题题干：比普通提示更重一档，避免「题目和说明分不清」 */
+.auth-qa-q {
+  margin-top: var(--sp-6);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  line-height: 1.6;
+  color: var(--text-1);
+}
+
+/* 密码显隐按钮：小眼睛图标（触摸热区 76x76rpx，远大于视觉尺寸，好点中） */
+.auth-eye {
+  position: relative;
+  flex: none;
+  width: 76rpx;
+  height: 76rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-4);
+  transition: color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
+}
+
+.auth-eye:active {
+  transform: scale(0.92);
+  background: var(--surface-2);
+}
+
+/* 明文状态下眼睛点亮，一眼看出「当前密码是可见的」 */
+.auth-eye.is-on {
+  color: var(--brand);
+}
+
+/* 明文时给瞳孔加一点点高光，让「睁眼」更有神态（不改变尺寸，不引起抖动） */
+.auth-eye .eye-plain::after {
+  box-shadow: 0 0 0 3rpx rgba(43, 92, 230, 0.18);
+}
+
+/* 「隐藏中」：在眼睛上斜划一道，形成「闭眼 / 被遮住」的通用语义 */
+.auth-eye.is-off::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 40rpx;
+  height: 3rpx;
+  margin-left: -20rpx;
+  margin-top: -1.5rpx;
+  background: currentColor;
+  border-radius: 2rpx;
+  transform: rotate(-42deg);
+}
+
+/* 输入框右侧小操作按钮（随机生成 / 换一题等）：64rpx 高并留出横向内边距 */
+.auth-inline-btn {
+  flex: none;
+  margin-left: var(--sp-5);
+  padding: 0 var(--sp-6);
+  height: 64rpx;
+  line-height: 64rpx;
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--brand-deep);
+  background: var(--brand-soft);
+  transition: background-color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+}
+
+.auth-inline-btn:active {
+  background: var(--brand-line);
+  transform: scale(0.97);
+}
+
+/* 图形验证码：整行布局，图片固定 200x72rpx，右侧留白与标签对齐 */
+.auth-captcha-row {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.auth-captcha-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.auth-captcha-img {
+  flex: none;
+  margin-left: var(--sp-5);
+  height: 72rpx;
+  width: 200rpx;
+  border-radius: var(--radius-m);
+  background: var(--surface-2);
+  border: 1rpx solid var(--line);
+}
+
+/* ---------------- 主操作按钮：唯一的高饱和色 ---------------- */
+.auth-submit {
+  margin-top: var(--sp-10);
+  height: 96rpx;
+  line-height: 96rpx;
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-title);
+  font-weight: 600;
+  color: var(--brand-on);
+  text-align: center;
+  letter-spacing: 1rpx;
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-ink) 100%);
+  box-shadow: var(--shadow-brand);
+  transition: transform var(--dur-fast) var(--ease-out), opacity var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.auth-submit:active {
+  transform: scale(0.98);
+  opacity: 0.92;
+  box-shadow: 0 4rpx 12rpx rgba(43, 92, 230, 0.24);
+}
+
+/* 未满足条件：保留蓝色色相整体降透明度，用户看得出「差条件」而不是「按钮坏了」 */
+.auth-submit-disabled {
+  opacity: 0.36;
+  box-shadow: none;
+}
+
+.auth-submit-disabled:active {
+  transform: none;
+}
+
+/* 次要操作（上一步等）：iOS 灰色按钮 */
+.auth-ghost {
+  margin-top: var(--sp-5);
+  height: 88rpx;
+  line-height: 88rpx;
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-md);
+  color: var(--text-2);
+  text-align: center;
+  background: var(--surface-2);
+  transition: background-color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+}
+
+.auth-ghost:active {
+  background: var(--surface-3);
+  transform: scale(0.99);
+}
+
+/* ---------------- 底部次要路径（注册 / 忘记密码） ---------------- */
+.auth-links {
+  margin-top: var(--sp-8);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--sp-2);
+}
+
+.auth-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 72rpx;
+  padding: 0 var(--sp-2);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--brand-deep);
+}
+
+.auth-link:active {
+  opacity: 0.55;
+}
+
+/* ---------------- 注册页：协议勾选（做成浅灰提示条，不抢主按钮注意力） ---------------- */
+.auth-agree {
+  display: flex;
+  align-items: flex-start;
+  margin-top: var(--sp-6);
+  padding: var(--sp-4);
+  background: var(--surface-2);
+  border-radius: var(--radius-m);
+}
+
+.auth-checkbox {
+  flex: none;
+  width: 36rpx;
+  height: 36rpx;
+  margin: 2rpx var(--sp-4) 0 0;
+  border-radius: 50%;
+  border: 2rpx solid var(--line-strong);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  color: #ffffff;
+  font-size: var(--fs-cap);
+  transition: background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+}
+
+.auth-checkbox-on {
+  background: var(--brand);
+  border-color: var(--brand);
+}
+
+.auth-agree-text {
+  flex: 1;
+  font-size: var(--fs-sm);
+  line-height: 1.7;
+  color: var(--text-2);
+}
+
+/* 书名号内的协议名：蓝色可点击 */
+.auth-agree-link {
+  color: var(--brand-deep);
+  font-weight: 500;
+}
+
+/* ---------------- 步骤条（忘记密码两步流程） ---------------- */
+.auth-steps {
+  display: flex;
+  align-items: center;
+  margin-top: var(--sp-5);
+  padding-bottom: var(--sp-4);
+}
+
+.auth-step {
+  display: flex;
+  align-items: center;
+}
+
+.auth-step-dot {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 50%;
+  font-size: var(--fs-cap);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-2);
+  color: var(--text-3);
+}
+
+.auth-step-dot-on {
+  background: var(--brand);
+  color: #ffffff;
+  box-shadow: 0 0 0 6rpx var(--brand-soft);
+}
+
+.auth-step-text {
+  margin-left: var(--sp-3);
+  font-size: var(--fs-sm);
+  color: var(--text-3);
+}
+
+.auth-step-text-on {
+  color: var(--brand-deep);
+  font-weight: 600;
+}
+
+.auth-step-line {
+  width: 56rpx;
+  height: 2rpx;
+  background: var(--line-strong);
+  margin: 0 var(--sp-5);
+}
+
+/* ---------------- 协议阅读弹窗正文 ---------------- */
+.auth-doc-body {
+  /* scroll-view 必须有「确定高度」才会内部滚动：
+     只写 max-height 时，内容会被 .modal 的 overflow:hidden 直接裁掉，手指怎么滑都不动。
+     协议与隐私政策两份文档都远超一屏，所以这里用固定高度，不会出现空荡的大白块。 */
+  height: 58vh;
+  padding: var(--sp-2) 0 var(--sp-1);
+  box-sizing: border-box;
+}
+
+.auth-doc-p {
+  font-size: var(--fs-body);
+  line-height: 1.85;
+  color: var(--text-2);
+  margin-bottom: var(--sp-4);
+}
+
+/* ---------------- 无障碍：系统「减弱动态效果」时全部降级为静态 ---------------- */
+@media (prefers-reduced-motion: reduce) {
+  .auth-card,
+  .auth-submit,
+  .auth-ghost,
+  .auth-inline-btn,
+  .auth-eye,
+  .auth-checkbox {
+    animation: none;
+    transition: none;
+  }
+}

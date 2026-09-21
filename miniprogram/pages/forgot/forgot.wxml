@@ -1,0 +1,185 @@
+<!--
+  忘记密码（只负责密保重置密码）
+  两步式：
+    第 1 步：账号ID + 图形验证码 → 取出该账号的 2 道密保问题
+    第 2 步：答 2 道密保（已认证账号需补真实学号 + 姓名）+ 新密码 + 图形验证码
+  全程图形验证码，短信通道已下线，零成本
+-->
+<view class="auth-page {{themeClass}} theme-root">
+  <!-- 全局通知条：管理员发布的公告，可关闭（本次会话内不再出现） -->
+  <notice-bar />
+
+  <!-- ============ 顶部品牌 ============ -->
+  <view class="auth-hero">
+    <image class="auth-logo" src="/images/logo.png" mode="aspectFill" />
+    <view class="auth-title">重置密码</view>
+    <view class="auth-subtitle">用注册时设置的密保问题找回</view>
+  </view>
+
+  <!-- ============ 第 1 步：输入账号取密保题目 ============ -->
+  <view class="auth-card" wx:if="{{step === 1}}">
+    <view class="auth-card-title">验证账号</view>
+
+    <!-- 步骤条：让用户知道后面还有一步，不会以为填完就结束了 -->
+    <view class="auth-steps">
+      <view class="auth-step">
+        <view class="auth-step-dot auth-step-dot-on">1</view>
+        <view class="auth-step-text auth-step-text-on">验证账号</view>
+      </view>
+      <view class="auth-step-line"></view>
+      <view class="auth-step">
+        <view class="auth-step-dot">2</view>
+        <view class="auth-step-text">回答密保</view>
+      </view>
+    </view>
+
+    <view class="auth-field">
+      <view class="auth-label">账号ID</view>
+      <input
+        class="auth-input"
+        value="{{account}}"
+        data-field="account"
+        bindinput="onInput"
+        placeholder="如 X0001"
+        placeholder-class="auth-placeholder"
+      />
+    </view>
+    <view class="auth-tip">忘记密码只支持「账号ID + 密保问题」，不支持手机号找回。</view>
+
+    <view class="auth-field">
+      <view class="auth-label">验证码</view>
+      <view class="auth-captcha-row">
+        <input
+          class="auth-input auth-captcha-input"
+          value="{{captchaCode}}"
+          data-field="captchaCode"
+          bindinput="onInput"
+          placeholder="填写计算结果"
+          placeholder-class="auth-placeholder"
+        />
+        <image class="auth-captcha-img" src="{{captcha.image}}" mode="aspectFit" bindtap="refreshCaptcha"></image>
+      </view>
+    </view>
+
+    <view class="auth-submit {{submitting ? 'auth-submit-disabled' : ''}}" bindtap="doStep1">
+      {{submitting ? '查询中…' : '下一步'}}
+    </view>
+
+    <view class="auth-links" style="justify-content:center">
+      <view class="auth-link" bindtap="goLogin">想起密码了？去登录</view>
+    </view>
+  </view>
+
+  <!-- ============ 第 2 步：答密保 + 设置新密码 ============ -->
+  <view class="auth-card" wx:if="{{step === 2}}">
+    <view class="auth-card-title">回答密保问题</view>
+
+    <view class="auth-steps">
+      <view class="auth-step">
+        <view class="auth-step-dot auth-step-dot-on">1</view>
+        <view class="auth-step-text auth-step-text-on">验证账号</view>
+      </view>
+      <view class="auth-step-line"></view>
+      <view class="auth-step">
+        <view class="auth-step-dot auth-step-dot-on">2</view>
+        <view class="auth-step-text auth-step-text-on">回答密保</view>
+      </view>
+    </view>
+
+    <!-- 两道密保问题：题目在上、答案在下，避免挤在一行看不清 -->
+    <view wx:for="{{questions}}" wx:key="index">
+      <view class="auth-tip" style="margin-top:28rpx">密保问题{{index + 1}}</view>
+      <view class="auth-qa-q">{{item}}</view>
+      <view class="auth-field" style="min-height:96rpx">
+        <view class="auth-label">答案</view>
+        <input
+          class="auth-input"
+          style="height:96rpx"
+          value="{{answers[index]}}"
+          data-index="{{index}}"
+          bindinput="onAnswerInput"
+          placeholder="请填写你的答案"
+          placeholder-class="auth-placeholder"
+        />
+      </view>
+    </view>
+
+    <!-- 已通过校园认证的账号：必须同时核对真实学号与姓名 -->
+    <block wx:if="{{needIdentity}}">
+      <view class="auth-tip" style="margin-top:28rpx">该账号已通过校园认证，需同时核对学号与姓名。</view>
+      <view class="auth-field">
+        <view class="auth-label">学号</view>
+        <input
+          class="auth-input"
+          value="{{studentId}}"
+          data-field="studentId"
+          bindinput="onInput"
+          placeholder="认证时填写的真实学号"
+          placeholder-class="auth-placeholder"
+        />
+      </view>
+      <view class="auth-field">
+        <view class="auth-label">姓名</view>
+        <input
+          class="auth-input"
+          value="{{name}}"
+          data-field="name"
+          bindinput="onInput"
+          placeholder="认证时填写的真实姓名"
+          placeholder-class="auth-placeholder"
+        />
+      </view>
+    </block>
+
+    <view class="auth-field" style="margin-top:20rpx">
+      <view class="auth-label">新密码</view>
+      <input
+        class="auth-input"
+        password="{{!showPassword}}"
+        value="{{newPassword}}"
+        data-field="newPassword"
+        bindinput="onInput"
+        placeholder="8-20位，含字母和数字"
+        placeholder-class="auth-placeholder"
+      />
+      <view class="auth-eye" bindtap="togglePassword">{{showPassword ? '隐藏' : '显示'}}</view>
+    </view>
+
+    <view class="auth-field">
+      <view class="auth-label">确认密码</view>
+      <input
+        class="auth-input"
+        password="{{!showPassword}}"
+        value="{{newPassword2}}"
+        data-field="newPassword2"
+        bindinput="onInput"
+        placeholder="请再次输入新密码"
+        placeholder-class="auth-placeholder"
+      />
+    </view>
+
+    <view class="auth-field">
+      <view class="auth-label">验证码</view>
+      <view class="auth-captcha-row">
+        <input
+          class="auth-input auth-captcha-input"
+          value="{{captchaCode}}"
+          data-field="captchaCode"
+          bindinput="onInput"
+          placeholder="填写计算结果"
+          placeholder-class="auth-placeholder"
+        />
+        <image class="auth-captcha-img" src="{{captcha.image}}" mode="aspectFit" bindtap="refreshCaptcha"></image>
+      </view>
+    </view>
+
+    <view class="auth-submit {{submitting ? 'auth-submit-disabled' : ''}}" bindtap="doStep2">
+      {{submitting ? '提交中…' : '重置密码'}}
+    </view>
+    <view class="auth-ghost" bindtap="backToStep1">返回上一步</view>
+
+    <view class="auth-tip">密保答错 5 次将锁定 15 分钟；同一账号 24 小时内仅可重置一次密码。</view>
+  </view>
+
+  <page-footer />
+</view>

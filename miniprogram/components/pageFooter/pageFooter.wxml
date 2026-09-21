@@ -1,0 +1,7 @@
+<!-- 页面底部官方 Q 群提示：每个页面底部空白处统一展示 -->
+<!-- 群号可直接点击，点一下即复制（不额外加「复制」按钮或提示文字，保持落款区干净） -->
+<view class="page-footer">
+  <view class="footer-tip">{{tip}}</view>
+  <view class="footer-group" hover-class="footer-group-hover" hover-stay-time="80"
+        data-value="{{qqGroup}}" data-label="QQ群号" bindtap="copyGroup">官方QQ群：{{qqGroup}}</view>
+</view>

@@ -1,0 +1,357 @@
+/**
+ * =====================================================================
+ * 任务卡片样式（v6 · iOS / Apple HIG）
+ * ---------------------------------------------------------------------
+ * 组件内自带一份基础工具类（.row / .sub / .tag-* 等）：自定义组件默认样式隔离，
+ * 虽然已开启 addGlobalClass，但保留本地定义可以保证在任何页面里渲染口径一致。
+ * 颜色 / 间距 / 圆角全部走 var(--token, 兜底值)，取不到变量时也不会崩。
+ *
+ * 信息层级（学生扫一眼就要能决定接不接）：
+ *   ① 送达地址（去哪）—— 卡片标题，34rpx/600，最多两行
+ *   ② 限时 + 跑腿费（多久 / 多少钱）—— 内嵌灰底的指标条，金额用暖橙 + 等宽数字
+ *   ③ 双方身份 —— 头像 + 昵称 + 账号ID + 学号 + 认证标识
+ *   ④ 备注 / 申诉提示 / 收件人与发布时间 —— 一路弱化到辅助色
+ * 右侧状态标签与左侧色条同源：扫一眼色条就知道任务处在哪个阶段。
+ * =====================================================================
+ */
+
+.task-card {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface, #ffffff);
+  border-radius: var(--radius-l, 28rpx);
+  /* 左边留出 8rpx 状态色条的位置 */
+  padding: var(--sp-6, 24rpx) var(--sp-6, 24rpx) var(--sp-5, 20rpx) var(--sp-8, 32rpx);
+  margin-bottom: var(--sp-4, 16rpx);
+  box-shadow: var(--shadow-card);
+  box-sizing: border-box;
+  transition: transform var(--dur-fast, 120ms) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)),
+    background-color var(--dur-fast, 120ms) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)),
+    box-shadow var(--dur-fast, 120ms) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+  /* 进场动效：关键帧在组件内单独定义一份，避免组件取不到全局关键帧 */
+  animation: tc-card-in 0.3s cubic-bezier(0.23, 1, 0.32, 1) backwards;
+}
+
+@keyframes tc-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(12rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 卡片左侧状态色条：上下内缩成胶囊，比通栏竖条更精致，也不会切到圆角 */
+.task-card::before {
+  content: '';
+  position: absolute;
+  left: 14rpx;
+  top: var(--sp-6, 24rpx);
+  bottom: var(--sp-6, 24rpx);
+  width: 6rpx;
+  border-radius: var(--radius-pill, 999rpx);
+  background: var(--brand, #2b5ce6);
+}
+
+/* 状态色条对齐语义色：蓝（待接单）/ 橙（进行中）/ 紫（待确认）/
+   绿（完成）/ 红（超时）/ 灰（撤销）。纯色而非渐变，和系统图标语言一致 */
+.accent-0::before { background: var(--brand, #2b5ce6); }
+.accent-1::before { background: var(--ios-orange, #d97706); }
+.accent-2::before { background: var(--ios-purple, #7048e8); }
+.accent-3::before { background: var(--ios-green, #0e9f6e); }
+.accent-4::before { background: var(--ios-red, #e02424); }
+.accent-5::before { background: var(--gray, #6b7688); }
+
+/* 按压反馈：iOS 用「变灰」表达按下，这里再叠一点点缩放让手感更实 */
+.task-card-press {
+  transform: scale(0.98);
+  background-color: var(--gray-6, #f1f4f9);
+  box-shadow: none;
+}
+
+/* ---------------- 头部：送达地址 + 状态标签 ---------------- */
+.tc-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.tc-addr {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-title, 34rpx);
+  font-weight: 600;
+  /* 大字号配负字距：中文在 34rpx 以上收紧一点更紧凑、更像成品 */
+  letter-spacing: -0.4rpx;
+  color: var(--text-1, #0f172a);
+  line-height: 1.4;
+  /* 最多两行，超出省略：地址再长也不会把卡片撑得过高 */
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* 订单号：等宽数字 + 弱化色，方便管理员/举报时对照，不抢地址的视线 */
+.tc-order {
+  margin-top: var(--sp-2, 8rpx);
+  font-size: var(--fs-cap, 22rpx);
+  letter-spacing: 0.5rpx;
+  color: var(--text-4, #9aa5b4);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------- 关键指标条：限时 + 酬金 ---------------- */
+.tc-metrics {
+  display: flex;
+  align-items: center;
+  margin-top: var(--sp-4, 16rpx);
+  padding: var(--sp-3, 12rpx) var(--sp-5, 20rpx);
+  /* 用冷灰做「内嵌分组」：和白卡拉开一层，但不抢走地址的注意力 */
+  background: var(--surface-2, #f1f4f9);
+  border-radius: var(--radius-m, 16rpx);
+}
+
+.tc-metric {
+  flex: 1;
+  min-width: 0;
+}
+
+.tc-metric + .tc-metric {
+  border-left: 1rpx solid var(--line, #e6eaf2);
+  padding-left: var(--sp-5, 20rpx);
+}
+
+.tc-metric-k {
+  display: block;
+  font-size: var(--fs-cap, 22rpx);
+  color: var(--text-3, #6b7688);
+  margin-bottom: 2rpx;
+}
+
+.tc-metric-v {
+  display: block;
+  font-size: var(--fs-md, 28rpx);
+  font-weight: 600;
+  color: var(--text-1, #0f172a);
+}
+
+.tc-metric-money {
+  text-align: right;
+}
+
+/* 卡片里的金额用 --fs-title，详情页用 --fs-h1：全站金额只有这两档 */
+.tc-metric-money .tc-metric-v {
+  font-size: var(--fs-title, 34rpx);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* ---------------- 基础工具类（组件内本地一份） ---------------- */
+.row {
+  display: flex;
+  align-items: center;
+}
+
+.row-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-1 {
+  flex: 1;
+  min-width: 0;
+}
+
+.sub {
+  font-size: var(--fs-sm, 24rpx);
+  color: var(--text-3, #6b7688);
+}
+
+.money {
+  color: var(--money, #c2410c);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.ellipsis {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.danger {
+  color: var(--danger, #c81e1e);
+}
+
+/* ---------------- 发布者 / 接单者信息行 ---------------- */
+.person-row {
+  display: flex;
+  align-items: center;
+  margin-top: var(--sp-4, 16rpx);
+  padding-top: var(--sp-4, 16rpx);
+  border-top: 1rpx solid var(--line, #e6eaf2);
+}
+
+.person-avatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  background: var(--brand-soft, #eef3ff);
+  flex-shrink: 0;
+  /* 头像外一圈白环：落在灰底指标条下方时边界更干净 */
+  box-shadow: 0 0 0 2rpx var(--surface, #ffffff);
+}
+
+.person-avatar-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--brand-deep, #2b5ce6);
+  font-size: var(--fs-md, 28rpx);
+  font-weight: 600;
+}
+
+.person-info {
+  margin-left: var(--sp-4, 16rpx);
+  min-width: 0;
+}
+
+.person-name {
+  font-size: var(--fs-md, 28rpx);
+  font-weight: 600;
+  color: var(--text-1, #0f172a);
+  max-width: 340rpx;
+}
+
+.person-role {
+  font-size: var(--fs-cap, 22rpx);
+  color: var(--brand-on, #ffffff);
+  background: var(--brand, #2b5ce6);
+  border-radius: var(--radius-s);
+  padding: 2rpx 12rpx;
+  margin-right: var(--sp-3, 12rpx);
+  flex-shrink: 0;
+}
+
+.person-row .tag {
+  margin-left: var(--sp-3, 12rpx);
+}
+
+/* ---------------- 状态标签（同色系淡底 + 深色字，不加描边） ---------------- */
+.tag {
+  display: inline-block;
+  /* flex 容器中标签背景框只包裹文字，避免被撑大 */
+  flex: none;
+  align-self: center;
+  width: fit-content;
+  max-width: 100%;
+  box-sizing: border-box;
+  white-space: nowrap;
+  padding: 2rpx 12rpx;
+  border-radius: var(--radius-s, 8rpx);
+  font-size: var(--fs-cap, 22rpx);
+  line-height: 1.6;
+  font-weight: 500;
+  background: var(--brand-soft);
+  color: var(--brand-deep, #2b5ce6);
+}
+
+.tag-success {
+  background: var(--success-soft);
+  color: var(--success, #0a7a54);
+}
+
+.tag-warn {
+  background: var(--warn-soft);
+  color: var(--warn, #b45309);
+}
+
+.tag-danger {
+  background: var(--danger-soft);
+  color: var(--danger, #c81e1e);
+}
+
+.tag-gray {
+  background: var(--surface-3);
+  color: var(--text-3, #6b7688);
+}
+
+/* 管理员标识：红色（管理员不再显示「已认证」） */
+.tag-admin {
+  background: var(--danger-soft);
+  color: var(--danger, #c81e1e);
+}
+
+/* 地址 + 任务类型标签：整体占满左侧剩余宽度，地址最多两行，标签不换行 */
+.tc-head-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3, 12rpx);
+}
+
+/* 任务类型标签：浅色卡上用「浅底 + 同色字」，视觉弱于右上角状态标签但一眼可辨。
+   5 个槽位与 TASK_TYPE 字典一一对应（0其他 1取快递 2食堂带饭 3打印资料 4超市代买） */
+.tag-type {
+  margin-top: 6rpx;
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.tag-type-0 { background: var(--surface-3); color: var(--text-3, #6b7688); }
+.tag-type-1 { background: var(--brand-soft); color: var(--brand); }
+.tag-type-2 { background: var(--warn-soft); color: var(--warn, #b45309); }
+.tag-type-3 { background: var(--success-soft); color: var(--success, #0a7a54); }
+.tag-type-4 { background: var(--purple-soft); color: var(--purple); }
+
+/* 右上角标签组 */
+.tag-group {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-left: var(--sp-4, 16rpx);
+}
+
+.tag-group .tag {
+  margin-left: var(--sp-3, 12rpx);
+}
+
+.tag-group .tag:first-child {
+  margin-left: 0;
+}
+
+/* ---------------- 备注 / 申诉提示 / 页脚 ---------------- */
+.task-remark {
+  font-size: var(--fs-sm, 24rpx);
+  color: var(--text-3, #6b7688);
+  margin-top: var(--sp-3, 12rpx);
+}
+
+.dispute-tip {
+  margin-top: var(--sp-3, 12rpx);
+  line-height: 1.6;
+}
+
+.tc-foot {
+  margin-top: var(--sp-4, 16rpx);
+  padding-top: var(--sp-4, 16rpx);
+  border-top: 1rpx solid var(--line, #e6eaf2);
+}
+
+.tc-foot .sub {
+  font-size: var(--fs-cap, 22rpx);
+  color: var(--text-4, #9aa5b4);
+}
+
+/* ---------------- 无障碍：系统「减弱动态效果」时全部降级为静态 ---------------- */
+@media (prefers-reduced-motion: reduce) {
+  .task-card {
+    animation: none;
+    transition: none;
+  }
+}

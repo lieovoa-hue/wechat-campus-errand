@@ -1,0 +1,285 @@
+/* =====================================================================
+   消息中心（v6）
+   ---------------------------------------------------------------------
+   结构：分类胶囊 → 未读操作条 → 单卡紧凑列表（左侧类型图标 + 标题 / 预览）
+   设计依据：docs/page-design-v1.md 第 12 页
+   行内只保留「标题 / 类型标签 / 时间 / 单行预览」，完整正文交给详情页，
+   一屏可见 6 条以上；整行可点。
+   ===================================================================== */
+
+.msg-page {
+  padding-top: var(--sp-5);
+}
+
+/* ---------------------------------------------------- 分类胶囊 */
+.msg-tabs {
+  white-space: nowrap;
+  margin-bottom: var(--sp-5);
+}
+
+.msg-tab {
+  display: inline-block;
+  height: 60rpx;
+  line-height: 60rpx;
+  padding: 0 var(--sp-6);
+  margin-right: var(--sp-3);
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+  background: var(--surface);
+  border: 2rpx solid var(--line);
+  border-radius: var(--radius-pill);
+  transition: color var(--dur-base) var(--ease-out),
+              background var(--dur-base) var(--ease-out),
+              border-color var(--dur-base) var(--ease-out),
+              transform var(--dur-fast) var(--ease-out);
+}
+
+.msg-tab:active {
+  transform: scale(.96);
+}
+
+.msg-tab-on {
+  font-weight: 600;
+  color: var(--brand-on);
+  background: var(--brand);
+  border-color: var(--brand);
+}
+
+/* ---------------------------------------------------- 未读操作条 */
+.msg-bar {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--sp-4);
+  padding: var(--sp-4) var(--sp-5);
+  background: var(--brand-soft);
+  border-radius: var(--radius-m);
+}
+
+.msg-bar-count {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--brand-deep);
+}
+
+.msg-bar-btns {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+.msg-act {
+  height: 56rpx;
+  line-height: 56rpx;
+  padding: 0 var(--sp-5);
+  margin-left: var(--sp-3);
+  font-size: var(--fs-sm);
+  color: var(--brand-deep);
+  background: var(--surface);
+  border-radius: var(--radius-pill);
+  transition: transform var(--dur-fast) var(--ease-out),
+              background var(--dur-fast) var(--ease-out);
+}
+
+.msg-act-press {
+  transform: scale(.95);
+  background: var(--brand-line);
+}
+
+.msg-act-danger {
+  color: var(--danger);
+}
+
+/* ---------------------------------------------------- 紧凑列表 */
+.msg-list {
+  background: var(--surface);
+  border-radius: var(--radius-l);
+  padding: var(--sp-2) var(--sp-5);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.msg-row {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  padding: var(--sp-5) 0;
+  transition: background var(--dur-fast) var(--ease-out),
+              transform var(--dur-fast) var(--ease-out);
+}
+
+/* iOS 分组列表：行间用内缩 1rpx 细线，最后一行不画 */
+.msg-row::after {
+  content: '';
+  position: absolute;
+  left: 88rpx;
+  right: 0;
+  bottom: 0;
+  height: 1rpx;
+  background: var(--line);
+}
+
+.msg-row:last-child::after {
+  display: none;
+}
+
+.msg-row-press {
+  background: var(--surface-2);
+}
+
+/* 左侧类型图标：同色系淡底圆角方块，形成统一视觉锚点 */
+.msg-ico {
+  position: relative;
+  flex: none;
+  width: 64rpx;
+  height: 64rpx;
+  margin-right: var(--sp-4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-m);
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.msg-ico-glyph {
+  color: inherit;
+  transform: scale(.86);
+}
+
+.msg-ico-admin {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.msg-ico-task {
+  background: var(--success-soft);
+  color: var(--success-fill);
+}
+
+.msg-ico-owner {
+  background: var(--warn-soft);
+  color: var(--warn-fill);
+}
+
+.msg-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.msg-row-top {
+  display: flex;
+  align-items: center;
+}
+
+.msg-title {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-md);
+  font-weight: 500;
+  color: var(--text-2);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* 未读标题加重加深，让「哪些还没看」一眼可见 */
+.msg-row-unread .msg-title {
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.msg-tag {
+  flex: none;
+  margin-left: var(--sp-3);
+  padding: 0 10rpx;
+  font-size: var(--fs-cap);
+  line-height: 1.6;
+  border-radius: var(--radius-s);
+  background: var(--surface-3);
+  color: var(--text-3);
+}
+
+.msg-tag-system {
+  background: var(--brand-soft);
+  color: var(--brand-deep);
+}
+
+.msg-tag-admin {
+  background: var(--accent-soft);
+  color: var(--accent-tx);
+}
+
+.msg-tag-task {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.msg-tag-owner {
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+
+.msg-time {
+  flex: none;
+  margin-left: var(--sp-3);
+  font-size: var(--fs-cap);
+  color: var(--text-4);
+}
+
+.msg-preview {
+  margin-top: 6rpx;
+  font-size: var(--fs-sm);
+  color: var(--text-4);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* 未读红点：贴住整行右下角，不参与布局 */
+.msg-unread-dot {
+  position: absolute;
+  right: 0;
+  bottom: 18rpx;
+  width: 14rpx;
+  height: 14rpx;
+  border-radius: 50%;
+  background: var(--danger-fill);
+}
+
+/* ---------------------------------------------------- 动效降级 */
+@media (prefers-reduced-motion: reduce) {
+  .msg-row,
+  .msg-tab,
+  .msg-act {
+    transition-duration: 1ms;
+  }
+}
+
+/* ---------------------------------------------------- 分类未读数角标 */
+.msg-tab {
+  position: relative;
+}
+
+.msg-tab-badge {
+  position: absolute;
+  top: -8rpx;
+  right: -6rpx;
+  min-width: 32rpx;
+  height: 32rpx;
+  padding: 0 8rpx;
+  box-sizing: border-box;
+  border-radius: var(--radius-pill);
+  background: var(--danger-fill);
+  color: var(--text-on-dark);
+  font-size: 20rpx;
+  line-height: 32rpx;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* ---------------------------------------------------- 置灰按钮 */
+/* 操作条常显：没有未读 / 没有消息时按钮保留在原位，仅置灰不可点，避免布局跳动 */
+.msg-act-disabled {
+  color: var(--text-4);
+  background: var(--surface-3);
+}

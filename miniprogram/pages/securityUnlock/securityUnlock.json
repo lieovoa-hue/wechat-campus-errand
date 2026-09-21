@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "安全验证",
+  "usingComponents": {
+    "page-footer": "/components/pageFooter/pageFooter",
+    "confirm-dialog": "/components/confirmDialog/confirmDialog",
+    "notice-bar": "/components/noticeBar/noticeBar"
+  }
+}

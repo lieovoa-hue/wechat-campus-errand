@@ -1,0 +1,1037 @@
+/* =====================================================================
+   首页 · 任务大厅（v6「下单入口页」）
+   ---------------------------------------------------------------------
+   结构对应 index.wxml；全部颜色 / 字号 / 间距 / 圆角 / 动效均取 app.wxss v6 令牌。
+   设计依据：docs/page-design-v1.png 第 05 页
+     ① 顶部一行「品牌 + 身份提示」替代超大标题；
+     ② 搜索独占一行，右侧只留「筛选」入口，排序与酬金区间收进底部 Sheet；
+     ③ 金刚区 5 宫格：取快递 / 食堂带饭 / 打印资料 / 超市代买 / 自定义发布；
+     ④ 进行中任务置顶为深色卡，带实时倒计时。
+   ===================================================================== */
+
+/* 页面外壳：满屏高的纵向 flex —— 顶部固定区不滚动，主体滚动区吃掉剩余高度。
+   主体为什么用 scroll-view 而不是页面原生滚动：见 index.wxml 顶部「刷新」说明。 */
+.hall {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--bg);
+}
+
+/* 顶部固定区：品牌行 + 搜索/筛选（左右内边距从 .hall 挪到这里） */
+.hall-head {
+  flex: none;
+  padding: 0 var(--page-pad);
+}
+
+/* 主体滚动区：牌堆 / 金刚区 / 任务列表 / 落款全在这里滚动，下拉刷新也只在这个区域生效。
+   min-height: 0 必须写 —— flex 子项默认 min-height:auto，不写撑不出真正的滚动容器。 */
+.hall-scroll {
+  flex: 1;
+  min-height: 0;
+  padding: 0 var(--page-pad) var(--sp-8);
+  box-sizing: border-box;
+}
+
+/* ---------------------------------------------------- ① 顶部一行（左：品牌 + 身份提示，右：主题开关） */
+.hall-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-5) 0 var(--sp-2);
+}
+
+/* 左侧文案列：min-width:0 是刚需 —— 不写的话长文案会把右侧开关顶出屏幕 */
+.hall-hello {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ---------------- 深浅色滑动开关 ----------------
+   位置：品牌行右侧，也就是用户指定的「筛选入口上方的留白处」——
+        不新增一行、不动搜索行，用掉的是原本空着的那块。
+   形态：76rpx 轨道 + 34rpx 圆钮，纯 CSS 画（图标字体里没有太阳 / 月亮，
+        再引一套 SVG 不划算）；点击 = 锁定浅色/深色，长按 = 恢复跟随系统。
+   配色：轨道用语义绿（iOS 开关惯例），圆钮纯白；深色下 green 由令牌自动提亮。 */
+.theme-toggle {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  height: 56rpx;
+  margin-top: 4rpx;
+}
+
+.theme-toggle-track {
+  position: relative;
+  width: 76rpx;
+  height: 44rpx;
+  box-sizing: border-box;
+  border: 1rpx solid var(--line-strong);
+  border-radius: var(--radius-pill);
+  background-color: var(--surface-3);
+  transition: background-color var(--dur-base) var(--ease-out),
+              border-color var(--dur-base) var(--ease-out);
+}
+
+.theme-toggle-knob {
+  position: absolute;
+  top: 4rpx;
+  left: 4rpx;
+  width: 34rpx;
+  height: 34rpx;
+  border-radius: 50%;
+  background-color: var(--surface);
+  box-shadow: 0 2rpx 6rpx rgba(15, 23, 42, 0.28);
+  transition: transform var(--dur-base) var(--ease-spring),
+              background-color var(--dur-base) var(--ease-out);
+}
+
+/* 打开 = 深色：轨道实心绿、圆钮滑到右侧并保持纯白（绿底上白钮对比度最高） */
+.theme-toggle-on .theme-toggle-track {
+  border-color: transparent;
+  background-color: var(--success-fill);
+}
+
+.theme-toggle-on .theme-toggle-knob {
+  transform: translateX(32rpx);
+  background-color: #ffffff;
+}
+
+.theme-toggle-txt {
+  font-size: var(--fs-cap);
+  color: var(--text-3);
+}
+
+.theme-toggle-hover {
+  opacity: 0.65;
+}
+
+.hall-brand {
+  display: block;
+  font-size: 38rpx;
+  font-weight: 700;
+  color: var(--text-1);
+  letter-spacing: -1rpx;
+}
+
+.hall-tip {
+  display: block;
+  margin-top: 8rpx;
+  font-size: var(--fs-sm);
+  color: var(--text-3);
+}
+
+/* ---------------------------------------------------- ② 搜索 + 筛选 */
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-top: var(--sp-4);
+}
+
+.search-bar {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  height: 80rpx;
+  padding: 0 var(--sp-5);
+  box-sizing: border-box;
+  background: var(--surface);
+  border: 2rpx solid var(--line-strong);
+  border-radius: var(--radius-pill);
+  transition: border-color var(--dur-base) var(--ease-out),
+              box-shadow var(--dur-base) var(--ease-out);
+}
+
+.search-bar-ico {
+  color: var(--text-4);
+}
+
+.search-bar-input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  font-size: var(--fs-body);
+  color: var(--text-1);
+}
+
+.search-bar-clear {
+  flex: none;
+  width: 56rpx;
+  height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-4);
+  border-radius: 50%;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.filter-entry {
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  height: 80rpx;
+  padding: 0 var(--sp-5);
+  box-sizing: border-box;
+  background: var(--surface);
+  border: 2rpx solid var(--line-strong);
+  border-radius: var(--radius-pill);
+  color: var(--text-2);
+  transition: transform var(--dur-fast) var(--ease-out),
+              background var(--dur-base) var(--ease-out),
+              border-color var(--dur-base) var(--ease-out),
+              color var(--dur-base) var(--ease-out);
+}
+
+.filter-entry-on {
+  background: var(--brand-soft);
+  border-color: var(--brand-line);
+  color: var(--brand);
+}
+
+.filter-entry-hover {
+  transform: scale(.96);
+  background: var(--surface-2);
+}
+
+.filter-entry-ico {
+  color: inherit;
+}
+
+.filter-entry-txt {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+.filter-dot {
+  position: absolute;
+  top: 12rpx;
+  right: 14rpx;
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 4rpx var(--surface);
+}
+
+/* ---------------------------------------------------- ③ 进行中任务堆叠卡 */
+/* 一摞牌：顶层卡最大最亮，身后两张依次「向上 + 向右」错位并缩小，
+   配合 translateZ 与逐层减弱的阴影，做出肉眼可见的立体层次。
+   全部用 WXSS 的 transform / transition / box-shadow 实现，无任何插件依赖。 */
+/* 牌堆：放在固定头部里（不在滚动区），所以和顶部固定区一样自带左右内边距。
+   放在滚动区之外的原因见 index.wxml —— 只有物理隔离才能彻底避免
+   「滑卡片」被 scroll-view 的下拉刷新抢走。flex: none 保证它不被压扁。 */
+.running-panel {
+  flex: none;
+  padding: 0 var(--page-pad);
+  margin-top: var(--sp-2);
+}
+
+/* 牌堆容器：上方留 44rpx 给「身后卡片露出的边」，同时整块都是手势热区；
+   padding 只留上方（下方不留，避免把下面的金刚区推低）。 */
+.deck-stack {
+  position: relative;
+  padding: 44rpx 0 0;
+  perspective: 1500rpx;
+}
+
+/* 单张卡：默认留在文档流里（顶层那张撑起容器高度），其余靠 .deck-card-1/2/3 绝对定位叠上去 */
+.deck-card {
+  position: relative;
+  box-sizing: border-box;
+  padding: var(--sp-6);
+  border-radius: var(--radius-l);
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgba(91, 132, 240, .22) 0%, rgba(91, 132, 240, 0) 58%),
+    linear-gradient(135deg, #22314F 0%, #0F172A 100%);
+  box-shadow: 0 14rpx 34rpx rgba(15, 23, 42, .26);
+  overflow: hidden;
+  /* 「后面卡片补位前移」「归位那张淡入」都靠这条过渡；
+     弹簧曲线带一点回弹，切换时才不会有生硬的位移感 */
+  transition: transform 400ms var(--ease-spring),
+              opacity var(--dur-base) var(--ease-out),
+              box-shadow var(--dur-base) var(--ease-out);
+  will-change: transform, opacity;
+}
+
+/* 身后两层 / 堆底：向上 + 向右错位，缩小并压暗，translateZ 再用透视压一层纵深 */
+.deck-card-1,
+.deck-card-2,
+.deck-card-3 {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 44rpx;
+}
+
+.deck-card-1 {
+  z-index: 20;
+  opacity: .96;
+  transform: translate3d(18rpx, -16rpx, -20rpx) scale(.99);
+  box-shadow: 0 12rpx 28rpx rgba(15, 23, 42, .22);
+}
+
+.deck-card-2 {
+  z-index: 10;
+  opacity: .88;
+  transform: translate3d(32rpx, -29rpx, -40rpx) scale(.972);
+  box-shadow: 0 10rpx 24rpx rgba(15, 23, 42, .18);
+}
+
+/* 第 4 张起收在堆底不显示（切换时会依次浮上来） */
+.deck-card-3 {
+  z-index: 0;
+  opacity: 0;
+  transform: translate3d(44rpx, -40rpx, -60rpx) scale(.955);
+}
+
+/* 顶层：正对用户，最大最亮、投影最重 */
+.deck-card-0 {
+  z-index: 30;
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+/* 归位那一帧：刚飞出去的那张卡在数据上已经排到堆底，先透明 + 关掉过渡，
+   否则它会从飞出方向倒着滑回来；下一帧 JS 摘掉这个 class，它就在堆底自然淡入。 */
+.deck-card-hidden {
+  opacity: 0;
+  transition: none;
+}
+
+/* 正在切换的那张卡：先被「抽」出牌堆，再斜着插回牌堆最后一层的空位。
+   用 @keyframes 而不是 transition —— 新加的 class 会在同一帧直接开播，
+   不会出现「先闪回原位置再动画」的问题。
+   动画时长必须与 JS 里的 DECK.FLY_DURATION（440ms）保持一致。
+   三段式关键帧 = 扑克牌手感：
+     0%→28%  抽出：只向上（下滑方向则是向下）抬起一小段并轻微放大，全不透明；
+     28%→64% 转向：开始向右侧的堆底空位平移、缩小、半透明；
+     64%→100% 归位：落到与身后卡片同一处错位坐标并完全淡出，随后由堆底淡入。 */
+.deck-card-fly-up,
+.deck-card-fly-down {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 44rpx;
+  z-index: 40;
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+  transition: none;
+  pointer-events: none;
+  animation-duration: 440ms;
+  /* 起步慢一点、后段收得稳，整体比原来柔和，不会有「弹飞」的生硬感 */
+  animation-timing-function: cubic-bezier(0.33, 0, 0.2, 1);
+  animation-fill-mode: forwards;
+}
+
+/* 上滑：把最上面这张向上抽出牌堆 */
+.deck-card-fly-up {
+  animation-name: deck-fly-up;
+}
+
+/* 下滑：把最上面这张向下抽出牌堆（同样是插回最后一层） */
+.deck-card-fly-down {
+  animation-name: deck-fly-down;
+}
+
+@keyframes deck-fly-up {
+  0%   { opacity: 1;  transform: translate3d(0, 0, 0) scale(1); }
+  28%  { opacity: 1;  transform: translate3d(0, -42rpx, 0) scale(1.015); }
+  64%  { opacity: .6; transform: translate3d(22rpx, -34rpx, 0) scale(.99); }
+  100% { opacity: 0;  transform: translate3d(44rpx, -40rpx, 0) scale(.955); }
+}
+
+@keyframes deck-fly-down {
+  0%   { opacity: 1;  transform: translate3d(0, 0, 0) scale(1); }
+  28%  { opacity: 1;  transform: translate3d(0, 42rpx, 0) scale(1.015); }
+  64%  { opacity: .6; transform: translate3d(22rpx, -8rpx, 0) scale(.99); }
+  100% { opacity: 0;  transform: translate3d(44rpx, -40rpx, 0) scale(.955); }
+}
+
+/* 按压反馈：写在所有 .deck-card-* 之后，保证能覆盖层级自带的 transform */
+.deck-card-press {
+  transform: translate3d(0, 0, 0) scale(.985);
+  box-shadow: 0 8rpx 20rpx rgba(15, 23, 42, .22);
+}
+/* ---------------- 卡片正面：头部 / 主信息 / 底部两栏 ---------------- */
+/* 头部：左侧身份 + 状态，右侧酬金（用「标签 + 小单位 + 大数字」建立金额层级） */
+.deck-head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+}
+
+.deck-chips {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+  /* 让身份 / 状态这条与右侧酬金数字的视觉中线大致齐平 */
+  padding-top: 8rpx;
+}
+
+.deck-role {
+  font-size: var(--fs-sm);
+  line-height: 1.3;
+  color: #C6D2E6;
+}
+
+.deck-status {
+  flex: none;
+  font-size: var(--fs-cap);
+  line-height: 1.3;
+  padding: 3rpx 14rpx;
+  border-radius: var(--radius-pill);
+  background: rgba(122, 162, 255, .16);
+  border: 1rpx solid rgba(122, 162, 255, .3);
+  color: #CFE0FF;
+}
+
+/* 状态色：槽位与 filter.taskAccentClass 一一对应（状态 0~5）
+   深色卡上统一用「同色系半透明底 + 同色系描边 + 浅色文字」，保证对比度足够；
+   待接单=蓝、进行中=橙、待雇主确认=紫、已完成=绿、超时取消=红、雇主撤销=灰。 */
+.deck-status-0 { background: rgba(59, 130, 246, .34); border-color: rgba(147, 197, 253, .68); color: #DBEAFE; }
+.deck-status-1 { background: rgba(249, 115, 22, .34); border-color: rgba(253, 186, 116, .70); color: #FFE0B8; }
+.deck-status-2 { background: rgba(139, 92, 246, .38); border-color: rgba(196, 181, 253, .72); color: #E9D5FF; }
+.deck-status-3 { background: rgba(16, 185, 129, .34); border-color: rgba(110, 231, 183, .68); color: #B5F0DA; }
+.deck-status-4 { background: rgba(239, 68, 68, .36); border-color: rgba(252, 165, 165, .70); color: #FFD0D0; }
+.deck-status-5 { background: rgba(148, 163, 184, .30); border-color: rgba(203, 213, 225, .60); color: #E2E8F0; }
+
+.deck-reward {
+  margin-left: auto;
+  flex: none;
+  display: flex;
+  align-items: baseline;
+  gap: 4rpx;
+}
+
+.deck-reward-label {
+  font-size: var(--fs-cap);
+  color: #8FA1C0;
+  margin-right: 2rpx;
+}
+
+.deck-reward-unit {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: #E8EFFF;
+}
+
+.deck-reward-num {
+  font-size: 44rpx;
+  font-weight: 700;
+  line-height: 1.05;
+  color: #FFFFFF;
+  letter-spacing: -.5rpx;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 主信息：一个定位圆点 + 送达地址，地址是卡片上字号最大的一行 */
+.deck-addr {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-top: var(--sp-5);
+}
+
+.deck-addr-dot {
+  flex: none;
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background: #7AA2FF;
+  box-shadow: 0 0 0 6rpx rgba(122, 162, 255, .16);
+}
+
+.deck-addr-txt {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  line-height: 1.3;
+  color: #FFFFFF;
+}
+
+/* 任务类型标签：与「身份 / 状态」并排，但刻意压低对比度，
+   保证三枚标签里「状态」永远是最先被看到的那一枚 */
+.deck-type {
+  flex: none;
+  font-size: var(--fs-cap);
+  line-height: 1.3;
+  padding: 3rpx 14rpx;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, .10);
+  border: 1rpx solid rgba(255, 255, 255, .18);
+  color: #D3DDEE;
+  white-space: nowrap;
+}
+
+/* ---------------- 限时倒计时条 ---------------- */
+/* 满格 → 空，宽度按剩余比例实时变化；颜色档位由 filter.limitBarState 统一给出：
+   pending 灰蓝（待接单 / 不限时）· safe 绿 · warm 橙 · danger 红 · over 亮红 */
+.deck-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-top: var(--sp-5);
+}
+
+.deck-bar-track {
+  flex: 1;
+  min-width: 0;
+  height: 12rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, .12);
+  overflow: hidden;
+}
+
+.deck-bar-fill {
+  height: 100%;
+  border-radius: 999rpx;
+  /* 每秒平滑推进，避免出现「一格一格跳」的卡顿感 */
+  transition: width 1s linear, background-color var(--dur-base) var(--ease-out);
+}
+
+.deck-bar-pending { background: linear-gradient(90deg, #46567A 0%, #8296BC 100%); }
+.deck-bar-safe    { background: linear-gradient(90deg, #16A34A 0%, #4ADE80 100%); }
+.deck-bar-warm    { background: linear-gradient(90deg, #D97706 0%, #FBBF24 100%); }
+.deck-bar-danger  { background: linear-gradient(90deg, #DC2626 0%, #F87171 100%); }
+.deck-bar-over    { background: linear-gradient(90deg, #EF4444 0%, #FF9B9B 100%); }
+
+.deck-bar-txt {
+  flex: none;
+  font-size: var(--fs-cap);
+  line-height: 1.2;
+  color: #8FA1C0;
+  /* 等宽数字：秒数变化时文字宽度不抖，右侧标签不会左右晃 */
+  font-variant-numeric: tabular-nums;
+}
+
+.deck-bar-txt-safe { color: #86EFAC; }
+.deck-bar-txt-warm { color: #FCD34D; }
+.deck-bar-txt-danger,
+.deck-bar-txt-over { color: #FF9B9B; }
+
+/* ---------------- 5 段进度条 ---------------- */
+/* 被接单后最左侧出现接单人头像 +「已接单」小标，右侧是 5 个节点与连线 */
+.deck-flow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  margin-top: var(--sp-5);
+}
+
+.deck-flow-ava {
+  position: relative;
+  flex: none;
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 50%;
+  background: rgba(122, 162, 255, .26);
+  border: 1rpx solid rgba(147, 197, 253, .62);
+  box-sizing: border-box;
+}
+
+.deck-flow-ava-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+
+/* 头像加载失败 / 未设置头像时的兜底底色（保持圆形占位，不出现破图） */
+.deck-flow-ava-ph {
+  background: linear-gradient(135deg, #7AA2FF 0%, #4B6BB5 100%);
+}
+
+/* 「已接单」小标压在头像正上方（设计稿要求：头像上面显示已接单） */
+.deck-flow-ava-tag {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  transform: translateX(-50%);
+  margin-bottom: 6rpx;
+  white-space: nowrap;
+  font-size: 16rpx;
+  line-height: 1.4;
+  padding: 2rpx 8rpx;
+  border-radius: var(--radius-pill);
+  background: rgba(34, 197, 94, .92);
+  color: #FFFFFF;
+}
+
+.deck-steps {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+}
+
+/* 连线：节点 5 等分，圆心正好落在 10% / 30% / 50% / 70% / 90% 处，
+   所以底轨从 10% 铺到 90%，已走过的部分用绿色高亮覆盖上去 */
+.deck-steps-line,
+.deck-steps-line-on {
+  position: absolute;
+  top: 6rpx;
+  height: 2rpx;
+  border-radius: 2rpx;
+}
+
+.deck-steps-line {
+  left: 10%;
+  right: 10%;
+  background: rgba(255, 255, 255, .16);
+}
+
+.deck-steps-line-on {
+  left: 10%;
+  background: #4ADE80;
+  transition: width var(--dur-base) var(--ease-out);
+}
+
+.deck-step {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.deck-step-dot {
+  width: 14rpx;
+  height: 14rpx;
+  border-radius: 50%;
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, .22);
+  border: 1rpx solid rgba(255, 255, 255, .3);
+  transition: background-color var(--dur-base) var(--ease-out);
+}
+
+.deck-step-dot-done {
+  background: #4ADE80;
+  border-color: #4ADE80;
+}
+
+/* 当前这一段：蓝点 + 外描边光圈，比「已走过」和「还没到」都更醒目 */
+.deck-step-dot-now {
+  background: #7AA2FF;
+  border-color: #DBEAFE;
+  box-shadow: 0 0 0 4rpx rgba(122, 162, 255, .26);
+}
+
+.deck-step-txt {
+  font-size: 18rpx;
+  line-height: 1.3;
+  color: #7E8DA8;
+  white-space: nowrap;
+}
+
+.deck-step-txt-done { color: #A7F3D0; }
+.deck-step-txt-now { color: #FFFFFF; font-weight: 600; }
+
+/* ---------------- 无任务占位卡 ---------------- */
+/* 与深色任务卡同一套配色 / 圆角 / 投影，只是内容换成一句说明 + 一个发布入口，
+   保证「有单 / 无单」两种状态在首屏占据的视觉重量一致 */
+.deck-empty {
+  box-sizing: border-box;
+  /* 与「有任务」时的深色卡大致等高：空态不会让下面的金刚区突然上移一大截 */
+  min-height: 380rpx;
+  justify-content: center;
+  padding: var(--sp-6);
+  border-radius: var(--radius-l);
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgba(91, 132, 240, .22) 0%, rgba(91, 132, 240, 0) 58%),
+    linear-gradient(135deg, #22314F 0%, #0F172A 100%);
+  box-shadow: 0 14rpx 34rpx rgba(15, 23, 42, .26);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.deck-empty-title {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+.deck-empty-sub {
+  margin-top: 8rpx;
+  font-size: var(--fs-cap);
+  line-height: 1.6;
+  color: #8FA1C0;
+}
+
+.deck-empty-btn {
+  margin-top: var(--sp-5);
+  padding: 10rpx 40rpx;
+  font-size: var(--fs-sm);
+  border-radius: var(--radius-pill);
+  background: rgba(122, 162, 255, .22);
+  border: 1rpx solid rgba(147, 197, 253, .62);
+  color: #DBEAFE;
+}
+
+.deck-empty-btn-hover {
+  background: rgba(122, 162, 255, .34);
+}
+
+/* 底部两栏：上有一条极细分隔线，每栏「标签在上、值在下」，左右各占一边 */
+.deck-foot {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--sp-5);
+  margin-top: var(--sp-5);
+  padding-top: var(--sp-4);
+  border-top: 1rpx solid rgba(255, 255, 255, .1);
+}
+
+.deck-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+  min-width: 0;
+}
+
+.deck-cell-r {
+  margin-left: auto;
+  align-items: flex-end;
+}
+
+.deck-cell-k {
+  font-size: var(--fs-cap);
+  line-height: 1.2;
+  color: #8FA1C0;
+}
+
+.deck-cell-v {
+  font-size: 36rpx;
+  font-weight: 700;
+  line-height: 1.15;
+  color: #FFFFFF;
+  letter-spacing: .5rpx;
+  font-variant-numeric: tabular-nums;
+}
+
+.deck-cell-v-over {
+  color: #FF9B9B;
+}
+
+.deck-cell-v-sm {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  letter-spacing: 0;
+  color: #C6D2E6;
+}
+
+/* 进度点 + 上滑提示（只有一条任务时整块不渲染） */
+.running-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* 上边距给身后那张卡露出的边留出空间，避免压到下面的金刚区 */
+  margin-top: 44rpx;
+  padding: 0 var(--sp-2);
+}
+
+.running-dots {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+/* 未选中的点是小圆点，选中后拉长成胶囊：一眼看出「一共几单、现在第几单」 */
+.running-dot {
+  width: 10rpx;
+  height: 10rpx;
+  border-radius: 50%;
+  background: rgba(43, 92, 230, .18);
+  transition: width var(--dur-base) var(--ease-out),
+              background-color var(--dur-base) var(--ease-out);
+}
+
+.running-dot-on {
+  width: 28rpx;
+  border-radius: 999rpx;
+  background: var(--brand);
+}
+
+.running-hint {
+  font-size: var(--fs-cap);
+  color: var(--text-4);
+}
+/* ---------------------------------------------------- ④ 金刚区 */
+/* 引导文案：居中浅灰小字，明确告诉新用户「这排图标可以直接下单」 */
+.quick-hint {
+  margin-top: var(--sp-6);
+  text-align: center;
+  font-size: var(--fs-cap);
+  line-height: 1.3;
+  color: var(--text-4);
+  letter-spacing: .5rpx;
+}
+
+.quick-grid {
+  display: flex;
+  gap: var(--sp-2);
+  /* 与上方引导文案贴紧一些，两者是一组 */
+  margin-top: var(--sp-3);
+}
+
+.quick-item {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--sp-4) 0 var(--sp-3);
+  background: var(--surface);
+  border: 2rpx solid var(--line);
+  border-radius: var(--radius-m);
+  transition: transform var(--dur-fast) var(--ease-out),
+              background var(--dur-fast) var(--ease-out);
+}
+
+.quick-item-hover {
+  transform: scale(.95);
+  background: var(--surface-2);
+}
+
+.quick-box {
+  position: relative;
+  width: 76rpx;
+  height: 76rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-m);
+}
+
+/* 快捷模板图标：抠好的彩色插画（已去白底与水印），不再按类别着色 */
+.quick-img {
+  width: 76rpx;
+  height: 76rpx;
+}
+
+/* 「自定义发布」没有配图，继续用 CSS 绘制的加号，保持同一视觉重量 */
+.quick-box-custom {
+  background: var(--surface-2);
+}
+
+.quick-box-custom .quick-ico {
+  color: var(--text-3);
+}
+
+.quick-badge {
+  position: absolute;
+  top: -14rpx;
+  right: -10rpx;
+  height: 32rpx;
+  line-height: 32rpx;
+  padding: 0 10rpx;
+  font-size: 20rpx;
+  font-weight: 600;
+  color: #FFFFFF;
+  white-space: nowrap;
+  background: var(--accent);
+  border-radius: var(--radius-pill);
+  transform: scale(.8);
+  transform-origin: 100% 0;
+  box-shadow: 0 2rpx 8rpx rgba(238, 108, 45, .35);
+}
+
+.quick-name {
+  display: block;
+  max-width: 100%;
+  margin-top: var(--sp-2);
+  font-size: var(--fs-cap);
+  font-weight: 600;
+  color: var(--text-1);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* 5 宫格宽度有限，副标题在首页隐藏，只在发布页展示 */
+.quick-meta {
+  display: none;
+}
+
+/* ---------------------------------------------------- ⑤ 列表头 */
+.list-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: var(--sp-8) 0 var(--sp-3);
+}
+
+.list-head-title {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.list-head-count {
+  font-size: var(--fs-sm);
+  color: var(--text-4);
+}
+
+/* ---------------------------------------------------- ⑥ 底部 Sheet */
+.sheet-mask {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 998;
+  background: var(--scrim-soft);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--dur-base) var(--ease-out),
+              visibility var(--dur-base) var(--ease-out);
+}
+
+.sheet-mask-on {
+  opacity: 1;
+  visibility: visible;
+}
+
+.sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+  padding: var(--sp-6) var(--page-pad) calc(var(--sp-8) + env(safe-area-inset-bottom));
+  background: var(--surface);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  box-shadow: var(--shadow-modal);
+  transform: translateY(104%);
+  transition: transform var(--dur-slow) var(--ease-drawer);
+}
+
+.sheet-on {
+  transform: translateY(0);
+}
+
+.sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sheet-title {
+  font-size: var(--fs-title);
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.sheet-close {
+  width: var(--touch);
+  height: var(--touch);
+  margin: -16rpx -16rpx -16rpx 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-3);
+  border-radius: 50%;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.sheet-close-hover {
+  background: var(--surface-2);
+}
+
+.sheet-label {
+  margin: var(--sp-6) 0 var(--sp-3);
+  font-size: var(--fs-sm);
+  color: var(--text-3);
+}
+
+.sheet-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+}
+
+.sheet-chip {
+  height: 64rpx;
+  line-height: 64rpx;
+  padding: 0 var(--sp-5);
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+  background: var(--surface-2);
+  border: 2rpx solid transparent;
+  border-radius: var(--radius-pill);
+  transition: color var(--dur-base) var(--ease-out),
+              background var(--dur-base) var(--ease-out),
+              border-color var(--dur-base) var(--ease-out),
+              transform var(--dur-fast) var(--ease-out);
+}
+
+.sheet-chip:active {
+  transform: scale(.96);
+}
+
+.sheet-chip-on {
+  font-weight: 600;
+  color: var(--brand);
+  background: var(--brand-soft);
+  border-color: var(--brand-line);
+}
+
+.sheet-range {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.sheet-input {
+  flex: 1;
+  min-width: 0;
+  height: 80rpx;
+  padding: 0 var(--sp-5);
+  box-sizing: border-box;
+  font-size: var(--fs-body);
+  color: var(--text-1);
+  background: var(--surface-2);
+  border: 2rpx solid var(--line-strong);
+  border-radius: var(--radius-m);
+}
+
+.sheet-sep {
+  flex: none;
+  color: var(--text-4);
+}
+
+.sheet-foot {
+  display: flex;
+  gap: var(--sp-4);
+  margin-top: var(--sp-8);
+}
+
+.sheet-btn {
+  flex: 1;
+}
+
+/* ---------------------------------------------------- 动效降级 */
+@media (prefers-reduced-motion: reduce) {
+  .deck-card,
+  .running-dot,
+  .quick-item,
+  .filter-entry,
+  .sheet,
+  .sheet-mask,
+  .sheet-chip {
+    transition-duration: 1ms;
+  }
+}

@@ -1,0 +1,58 @@
+<!--
+  消息中心
+  结构：分类标签 → 未读操作条 → 紧凑消息行（点任意一行进详情页）
+  设计意图：消息数量可能很多，行高做小、信息只留「类型 / 标题 / 时间 / 一行预览」，
+  让一屏能看 8~10 条；完整正文交给详情页，避免列表被长文本撑爆。
+-->
+<view class="container msg-page {{themeClass}} theme-root">
+  <!-- 全局通知条：管理员发布的公告，可关闭（本次会话内不再出现） -->
+  <notice-bar />
+  <!-- 统一确认弹窗（自绘，深色自适应）：由 utils/dialog.js 通过 selectComponent 调用 -->
+  <confirm-dialog id="confirmDialog" />
+  <!-- 分类标签 -->
+  <scroll-view class="msg-tabs" scroll-x enable-flex>
+    <view wx:for="{{typeTabs}}" wx:key="label"
+          class="msg-tab {{activeType === item.value ? 'msg-tab-on' : ''}}"
+          data-value="{{item.value}}" bindtap="onTabChange">
+      <text>{{item.label}}</text>
+      <!-- 分类未读数角标（该分类没有未读时不渲染） -->
+      <view class="msg-tab-badge" wx:if="{{item.badgeText}}">{{item.badgeText}}</view>
+    </view>
+  </scroll-view>
+
+  <!-- 操作条：常显（已读后不再消失），无未读 / 无消息时按钮置灰 -->
+  <view class="msg-bar">
+    <view class="msg-bar-count">{{unreadText}}</view>
+    <view class="msg-bar-btns">
+      <view class="msg-act {{unread > 0 ? '' : 'msg-act-disabled'}}"
+            hover-class="msg-act-press" hover-stay-time="60" bindtap="readAll">{{readAllText}}</view>
+      <view class="msg-act msg-act-danger {{total > 0 ? '' : 'msg-act-disabled'}}"
+            hover-class="msg-act-press" hover-stay-time="60" bindtap="deleteAll">{{deleteAllText}}</view>
+    </view>
+  </view>
+
+  <!-- 消息行 -->
+  <view class="msg-list">
+    <view wx:for="{{list}}" wx:key="id"
+          class="msg-row {{item.is_read === 0 ? 'msg-row-unread' : ''}}"
+          hover-class="msg-row-press" hover-stay-time="60"
+          data-id="{{item.id}}" bindtap="goDetail">
+      <view class="msg-ico msg-ico-{{item.typeClass}}">
+        <view class="ico ico-{{item.iconName}} msg-ico-glyph"></view>
+      </view>
+      <view class="msg-main">
+        <view class="msg-row-top">
+          <view class="msg-title">{{item.title}}</view>
+          <view class="msg-tag msg-tag-{{item.typeClass}}">{{item.typeText}}</view>
+          <view class="msg-time">{{item.timeText}}</view>
+        </view>
+        <view class="msg-preview">{{item.content}}</view>
+      </view>
+      <view class="msg-unread-dot" wx:if="{{item.is_read === 0}}"></view>
+    </view>
+  </view>
+
+  <view class="empty" wx:if="{{list.length === 0 && !loading}}">暂无消息</view>
+  <page-footer />
+  <view class="safe-bottom"></view>
+</view>

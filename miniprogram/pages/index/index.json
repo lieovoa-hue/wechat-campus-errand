@@ -1,0 +1,10 @@
+{
+  "navigationBarTitleText": "任务大厅",
+  "enablePullDownRefresh": false,
+  "usingComponents": {
+    "task-card": "/components/taskCard/taskCard",
+    "page-footer": "/components/pageFooter/pageFooter",
+    "confirm-dialog": "/components/confirmDialog/confirmDialog",
+    "notice-bar": "/components/noticeBar/noticeBar"
+  }
+}

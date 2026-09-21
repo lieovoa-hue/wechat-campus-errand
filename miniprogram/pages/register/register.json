@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "注册",
+  "usingComponents": {
+    "page-footer": "/components/pageFooter/pageFooter",
+    "notice-bar": "/components/noticeBar/noticeBar"
+  }
+}

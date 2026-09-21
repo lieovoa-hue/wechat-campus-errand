@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "申诉中心",
+  "usingComponents": {
+    "page-footer": "/components/pageFooter/pageFooter",
+    "notice-bar": "/components/noticeBar/noticeBar"
+  }
+}

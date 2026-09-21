@@ -1,0 +1,27 @@
+<!-- 新设备登录 · 安全解锁：答对 2 道密保问题才能拿到登录令牌 -->
+<view class="container {{themeClass}} theme-root">
+  <!-- 全局通知条：管理员发布的公告，可关闭（本次会话内不再出现） -->
+  <notice-bar />
+  <!-- 统一确认弹窗（自绘，深色自适应）：由 utils/dialog.js 通过 selectComponent 调用 -->
+  <confirm-dialog id="confirmDialog" />
+
+  <view class="card">
+    <view class="title">新设备安全验证</view>
+    <view class="sub">检测到当前设备不是你的常用设备。为保护账号安全，请回答密保问题完成验证。</view>
+    <view class="tips">连续答错 5 次将锁定 15 分钟；验证通过后，本设备将自动成为常用设备。</view>
+  </view>
+
+  <view class="card">
+    <view class="form-item" wx:for="{{questions}}" wx:key="index">
+      <view class="form-label">密保问题{{index + 1}}</view>
+      <view class="form-tip">{{item}}</view>
+      <input class="form-input" value="{{answers[index]}}" data-index="{{index}}" bindinput="onAnswerInput"
+             placeholder="请填写你的答案" placeholder-class="placeholder" />
+    </view>
+  </view>
+
+  <button class="btn btn-primary submit" bindtap="doUnlock" disabled="{{submitting}}">验证并登录</button>
+  <button class="btn btn-plain" bindtap="backToLogin">返回重新登录</button>
+
+  <page-footer />
+</view>

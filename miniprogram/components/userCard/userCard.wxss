@@ -1,0 +1,152 @@
+/**
+ * 用户 mini 卡片（举报列表 / 任务详情 / 管理员后台 / 我的发布共用）
+ * v6：浅灰内嵌底 + 大圆角，头像加白色内圈更有层次；
+ *     可点击时给出按压反馈与右箭头。令牌取 app.wxss v6。
+ */
+.mini-card {
+  display: flex;
+  align-items: center;
+  padding: var(--sp-5, 20rpx);
+  border-radius: var(--radius-m, 16rpx);
+  background: var(--surface-2, #f1f4f9);
+  transition: transform var(--dur-fast, 120ms) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)),
+    background-color var(--dur-fast, 120ms) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+.mini-card + .mini-card {
+  margin-top: var(--sp-4, 16rpx);
+}
+
+/* 可点击：底色带一点品牌蓝，提示「这一块能点」 */
+.mini-card-clickable {
+  background: var(--brand-soft, #eef3ff);
+}
+
+.mini-card-hover {
+  background: var(--gray-5, #e6eaf2);
+  transform: scale(0.985);
+}
+
+.mini-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.mini-avatar {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 50%;
+  background: var(--brand-soft, #eef3ff);
+  /* 白色内圈：头像落在浅灰底上时边界更干净 */
+  box-shadow: 0 0 0 4rpx var(--surface, #ffffff);
+}
+
+.mini-avatar-ph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--brand-deep, #2b5ce6);
+  font-size: var(--fs-lg, 30rpx);
+  font-weight: 600;
+}
+
+/* 已认证用户头像右下角的小绿点，视觉上一眼区分认证身份 */
+.mini-dot {
+  position: absolute;
+  right: 0;
+  bottom: 2rpx;
+  width: 18rpx;
+  height: 18rpx;
+  border-radius: 50%;
+  background: var(--success-fill, #0e9f6e);
+  border: 3rpx solid var(--surface, #ffffff);
+}
+
+.mini-body {
+  flex: 1;
+  min-width: 0;
+  margin-left: var(--sp-5, 20rpx);
+}
+
+.mini-line-top {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.mini-role {
+  flex-shrink: 0;
+  margin-right: var(--sp-3, 12rpx);
+  padding: 2rpx 12rpx;
+  border-radius: var(--radius-s);
+  font-size: var(--fs-cap, 22rpx);
+  color: var(--brand-on, #ffffff);
+  background: var(--brand, #2b5ce6);
+}
+
+.mini-name {
+  font-size: var(--fs-md, 28rpx);
+  font-weight: 600;
+  color: var(--text-1, #0f172a);
+  max-width: 300rpx;
+}
+
+.mini-line-top .tag {
+  margin-left: var(--sp-3, 12rpx);
+  flex-shrink: 0;
+}
+
+.mini-meta {
+  display: flex;
+  align-items: center;
+  margin-top: var(--sp-2, 8rpx);
+  font-size: var(--fs-sm, 24rpx);
+  color: var(--text-2, #475569);
+}
+
+.mini-meta-k {
+  width: 96rpx;
+  flex-shrink: 0;
+  color: var(--text-3, #6b7688);
+}
+
+.mini-meta-v {
+  flex: 1;
+  min-width: 0;
+  word-break: break-all;
+}
+
+/* ---------------- 手机号 + 拨打（仅任务双方可见） ---------------- */
+/* 号码用等宽数字，避免不同机型下跳字 */
+.mini-phone {
+  font-variant-numeric: tabular-nums;
+}
+
+.mini-call {
+  flex: none;
+  margin-left: var(--sp-3, 12rpx);
+  padding: 4rpx 22rpx;
+  border-radius: var(--radius-pill, 999rpx);
+  font-size: var(--fs-cap, 22rpx);
+  font-weight: 600;
+  color: var(--brand-on, #ffffff);
+  background: var(--brand, #2b5ce6);
+  transition: transform var(--dur-fast, 120ms) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+.mini-call-hover {
+  transform: scale(0.94);
+}
+
+/* 对方没填号码：置灰但仍可点（点了提示「对方未填写手机号」，不会静默无反应） */
+.mini-call-off {
+  background: var(--gray-5, #e6eaf2);
+  color: var(--text-4, #9aa5b4);
+}
+
+.mini-arrow {
+  flex-shrink: 0;
+  margin-left: var(--sp-3, 12rpx);
+  color: var(--text-4, #9aa5b4);
+  font-size: var(--fs-title);
+}

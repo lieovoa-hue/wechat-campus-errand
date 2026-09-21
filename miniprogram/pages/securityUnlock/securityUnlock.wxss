@@ -1,0 +1,3 @@
+.submit {
+  margin: var(--sp-8, 32rpx) 0 var(--sp-4, 16rpx);
+}

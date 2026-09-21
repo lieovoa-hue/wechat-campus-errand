@@ -1,0 +1,561 @@
+<view class="container {{themeClass}} theme-root" wx:if="{{task}}">
+  <!-- 全局通知条：管理员发布的公告，可关闭（本次会话内不再出现） -->
+  <notice-bar />
+  <!-- 统一确认弹窗（自绘，深色自适应）：由 utils/dialog.js 通过 selectComponent 调用 -->
+  <confirm-dialog id="confirmDialog" />
+  <!-- 管理员删除提示：任务已被下架（数据保留，账单 / 旧链接点进来仍能看到本条提示） -->
+  <view class="card delete-banner" wx:if="{{isDeleted}}">
+    <view class="delete-banner-title">{{deleteNoticeText}}</view>
+    <view class="sub" wx:if="{{deleteReason}}">删除原因：{{deleteReason}}</view>
+  </view>
+
+  <!-- 任务信息 -->
+  <view class="card">
+    <!-- 头部：送达地址作为主标题（用户第一眼要看「送到哪」），右上角是状态 -->
+    <view class="td-head">
+      <view class="td-head-main">
+        <view class="td-type-row">
+          <text class="td-type-tag {{taskTypeClass}}">{{taskTypeText}}</text>
+        </view>
+        <text class="td-addr">{{task.deliverAddress}}</text>
+      </view>
+      <view class="{{statusClass}}">{{statusText}}</view>
+    </view>
+
+    <!-- 关键数字前置：酬金 + 限时，接单前最关心的两个值 -->
+    <view class="td-metrics">
+      <view class="td-metric">
+        <text class="td-metric-k">任务酬金</text>
+        <text class="td-metric-v money">¥{{rewardText}}</text>
+        <text class="td-metric-tip">线下转账结算</text>
+      </view>
+      <view class="td-metric td-metric-r">
+        <text class="td-metric-k">限时要求</text>
+        <text class="td-metric-v">{{limitText}}</text>
+        <text class="td-metric-tip">接单后开始计时</text>
+      </view>
+    </view>
+
+    <!-- 限时倒计时条：接单后开始计时，满格 → 空；剩余越少颜色越警示，
+         配色 / 文案与首页深色卡共用 filter.limitBarState，两处永远一致 -->
+    <view class="td-bar">
+      <text class="td-bar-label">限时倒计时</text>
+      <view class="td-bar-track">
+        <view class="td-bar-fill td-bar-{{barClass}}" style="width:{{barPercent}}%"></view>
+      </view>
+      <text class="td-bar-txt td-bar-txt-{{barClass}}">{{barText}}</text>
+    </view>
+
+    <!-- 订单号 / 任务ID：举报、客服核对时使用 -->
+    <view class="order-no" wx:if="{{task.orderNo}}">订单号：{{task.orderNo}}　任务ID：#{{task.id}}</view>
+
+    <!-- 任务进度：5 段（①已接单 ②已取货 ③已送达 ④待支付 ⑤完成），未接单时整块不渲染 -->
+    <view class="td-flow" wx:if="{{progressStep > 0}}">
+      <view class="td-flow-head">
+        <text class="td-flow-title">任务进度</text>
+        <text class="td-flow-text">{{progressText}}</text>
+      </view>
+      <view class="td-flow-body">
+        <view class="td-flow-ava">
+          <text class="td-flow-ava-tag">已接单</text>
+          <image class="td-flow-ava-img" wx:if="{{takerAvatar}}" src="{{takerAvatar}}" mode="aspectFill"></image>
+          <view class="td-flow-ava-img td-flow-ava-ph" wx:else></view>
+        </view>
+        <view class="td-steps">
+          <view class="td-steps-line"></view>
+          <view class="td-steps-line-on" style="width:{{flowPercent}}%"></view>
+          <view class="td-step" wx:for="{{progressSteps}}" wx:key="key">
+            <view class="td-step-dot td-step-dot-{{item.state}}"></view>
+            <text class="td-step-txt td-step-txt-{{item.state}}">{{item.label}}</text>
+          </view>
+        </view>
+      </view>
+      <view class="td-flow-times" wx:if="{{progressTimesText}}">{{progressTimesText}}</view>
+    </view>
+    <view class="info-row">
+      <text class="info-label">送达地址</text>
+      <text class="info-value">{{task.deliverAddress}}</text>
+    </view>
+    <!-- 详细地址（选填）：发布时填写的门牌 / 房间号 / 工位补充说明 -->
+    <view class="info-row" wx:if="{{task.detailAddress}}">
+      <text class="info-label">详细地址</text>
+      <text class="info-value">{{task.detailAddress}}</text>
+    </view>
+    <view class="info-row">
+      <text class="info-label">收件人</text>
+      <text class="info-value">{{task.receiverName}} {{task.receiverPhone || task.receiverPhoneMask}}</text>
+    </view>
+    <!-- 取件码（选填）：仅雇主与接单者可见，跑腿员凭码取件 -->
+    <view class="info-row" wx:if="{{task.pickupCode}}">
+      <text class="info-label">取件码</text>
+      <text class="info-value pickup-code">{{task.pickupCode}}</text>
+    </view>
+    <!-- 帮带物品：除「取快递」外的带饭 / 打印 / 代买任务的核心信息，跑腿员按此采购 -->
+    <view class="info-row" wx:if="{{task.itemName}}">
+      <text class="info-label">帮带物品</text>
+      <text class="info-value">{{task.itemName}}</text>
+    </view>
+    <view class="info-row" wx:if="{{task.remark}}">
+      <text class="info-label">备注</text>
+      <text class="info-value">{{task.remark}}</text>
+    </view>
+    <view class="info-row">
+      <text class="info-label">发布时间</text>
+      <text class="info-value">{{publishTimeText}}</text>
+    </view>
+    <view class="info-row" wx:if="{{takeTimeText}}">
+      <text class="info-label">接单时间</text>
+      <text class="info-value">{{takeTimeText}}</text>
+    </view>
+    <view class="info-row" wx:if="{{submitTimeText}}">
+      <text class="info-label">提交时间</text>
+      <text class="info-value">{{submitTimeText}}</text>
+    </view>
+    <!-- 超时送达：跑腿员超过限时才送达，雇主可在确认前按规则扣减酬金 -->
+    <view class="info-row" wx:if="{{task.isLateDelivery}}">
+      <text class="info-label">送达情况</text>
+      <text class="info-value danger">超时送达（超时 {{lateText}}）</text>
+    </view>
+  </view>
+
+  <!-- 相关人员：发布者 / 接单者 的头像、昵称、账号ID、学号、认证标识 -->
+  <view class="card">
+    <view class="title">相关人员</view>
+
+    <!-- 手机号直接展示在上面两张 mini 卡片里（仅双方可见），不再单独占一块「联系方式」 -->
+    <view class="sub tips" wx:if="{{showContact}}">双方联系方式仅彼此可见，方便取件码沟通 / 送达确认 / 酬金转账。</view>
+
+    <!-- 发布者（雇主）与接单者（跑腿员）统一走 userCard 组件，展示口径全站一致 -->
+    <user-card wx:if="{{ownerPerson}}" person="{{ownerPerson}}" bindcall="callPhone" />
+    <!-- 接单者：无人接单时 takerPerson 为 null，组件整体不渲染 -->
+    <user-card wx:if="{{takerPerson}}" person="{{takerPerson}}" bindcall="callPhone" />
+
+  </view>
+
+  <!-- 任务相关图片 -->
+  <view class="card" wx:if="{{task.images.length > 0}}">
+    <view class="title">相关图片</view>
+    <view class="img-grid" style="margin-top:16rpx">
+      <image wx:for="{{task.images}}" wx:key="*this" class="img-thumb" src="{{item}}" mode="aspectFill"
+             data-source="task" data-index="{{index}}" bindtap="previewImage" />
+    </view>
+  </view>
+
+  <!-- 物品照片（接单人拿到 / 买到物品的凭证，由「确认取货」落库并锁定，之后任何人不可修改） -->
+  <view class="card" wx:if="{{task.pickupImages.length > 0}}">
+    <view class="td-title-row">
+      <view class="title">物品照片</view>
+      <view class="lock-chip" wx:if="{{pickupLocked}}">已锁定</view>
+    </view>
+    <view class="sub tips">接单人已拿到 / 买到物品时拍摄，确认取货后已锁定。</view>
+    <view class="img-grid" style="margin-top:16rpx">
+      <image wx:for="{{task.pickupImages}}" wx:key="*this" class="img-thumb" src="{{item}}" mode="aspectFill"
+             data-source="pickupServer" data-index="{{index}}" bindtap="previewImage" />
+    </view>
+  </view>
+
+  <!-- 送达照片（接单人送达时拍摄） -->
+  <view class="card" wx:if="{{task.deliveryImages.length > 0}}">
+    <view class="title">送达照片</view>
+    <view class="sub tips">接单人送达至指定地址时拍摄。</view>
+    <view class="img-grid" style="margin-top:16rpx">
+      <image wx:for="{{task.deliveryImages}}" wx:key="*this" class="img-thumb" src="{{item}}" mode="aspectFill"
+             data-source="server" data-index="{{index}}" bindtap="previewImage" />
+    </view>
+  </view>
+
+  <!-- ============ 雇主视角操作区 ============ -->
+  <!-- 管理员已删除的任务：整个操作区不渲染（后端 actions 全为 false，这里同步冻结入口） -->
+  <view class="card" wx:if="{{isOwner && !isDeleted}}">
+    <view class="title">雇主操作</view>
+
+    <!-- 待接单 -->
+    <block wx:if="{{task.status === 0}}">
+      <view class="sub tips">任务待接单中，可编辑任务信息；撤销后任务立即下架，信息服务费可在「我的发布 - 已撤销」中申请退还。</view>
+      <view class="btn-row">
+        <button class="btn btn-plain" bindtap="goEdit">编辑任务</button>
+        <button class="btn btn-danger" bindtap="ownerCancel">撤销任务</button>
+      </view>
+    </block>
+
+    <!-- 已撤销：退费入口在「我的发布 - 已撤销」 -->
+    <block wx:if="{{task.status === 5}}">
+      <view class="sub tips">该任务已撤销并从任务大厅下架，不可再次编辑。</view>
+      <view class="sub tips" wx:if="{{task.isRefunded}}">信息服务费已原路退回。</view>
+      <view class="sub tips" wx:elif="{{actions.canApplyRefund}}">可在「我的发布 - 已撤销」中点击「申请退券」，返还 1 张发布券（价值 0.1 元，下次发布自动抵扣）。</view>
+      <view class="sub tips" wx:elif="{{actions.refundDisabledReason}}">{{actions.refundDisabledReason}}</view>
+    </block>
+
+    <!-- 进行中 -->
+    <block wx:if="{{task.status === 1}}">
+      <view class="sub tips">跑腿员配送中，请保持电话畅通。</view>
+      <!-- 限时任务已超时：系统已自动扣减酬金但任务不取消，跑腿员仍可继续送达 -->
+      <block wx:if="{{task.isOvertime}}">
+        <view class="sub tips danger">
+          跑腿员已超时 {{overtimeText}}，系统已自动扣减酬金 ¥{{task.lateDeductAmount}}（酬金的5%，不足0.5元按0.5元），当前酬金 ¥{{rewardText}}。任务不会取消，跑腿员仍可继续送达。
+        </view>
+        <view class="sub tips danger">若对方长期恶意超时，可点击「举报恶意超时」，投诉将直达管理员处理。</view>
+      </block>
+      <!-- 限时任务已超时：雇主可直接结束任务（3秒倒计时二次确认），确认后双方任务同时结束 -->
+      <view class="sub tips danger" wx:if="{{actions.canEndOvertime}}">
+        该限时任务已超过约定时间，你可以点击「结束任务」结束本次订单，结束后双方任务将同时关闭，接单者不再获得任务收入。
+      </view>
+      <!-- 主操作一行两个（等宽）；「举报恶意超时」是低频的次级操作，单独占一行满宽，
+           避免三个按钮挤在一行时文字被截断 -->
+      <view class="btn-row">
+        <button class="btn btn-primary" bindtap="openRewardModal">加酬金</button>
+        <button class="btn btn-plain" wx:if="{{actions.canEditAfterTake}}" bindtap="goEdit">编辑任务</button>
+        <button class="btn btn-danger" wx:if="{{actions.canEndOvertime}}" bindtap="openEndModal">结束任务</button>
+      </view>
+      <!-- 撤销规则：接单人还没确认取货 → 可撤销（信息服务费不退）；
+           已确认取货 → 只能编辑，不能撤销，避免物品已经拿到手却被单方面关单 -->
+      <view class="sub tips" wx:if="{{actions.canCancel}}">接单人尚未确认取货，此时撤销将立即下架任务，0.1 元信息服务费不予退还。</view>
+      <view class="sub tips" wx:elif="{{actions.canEditAfterTake}}">接单人已确认取货：任务不可撤销，仍可编辑地址、收件人电话、备注等不影响酬金的字段。</view>
+      <view class="btn-row btn-row-tight" wx:if="{{actions.canCancel}}">
+        <button class="btn btn-danger" bindtap="ownerCancel">撤销任务</button>
+      </view>
+      <view class="btn-row btn-row-tight" wx:if="{{actions.canReportTaker}}">
+        <button class="btn btn-danger" bindtap="openReportTakerModal">举报接单人</button>
+      </view>
+      <view class="btn-row btn-row-tight" wx:if="{{actions.canReportLateTaker}}">
+        <button class="btn btn-danger" bindtap="openLateReportModal">举报恶意超时</button>
+      </view>
+    </block>
+
+    <!-- 待确认 -->
+    <block wx:if="{{task.status === 2}}">
+      <view class="sub tips" wx:if="{{!task.isDisputed && !task.ownerReceiptTime}}">跑腿员已提交送达照片，请核对实物后点击「确认收货」；超过2小时未确认将自动确认收货。</view>
+      <!-- 已提交未送达申诉：倒计时自动收货已停止 -->
+      <view class="sub tips danger" wx:if="{{task.isDisputed}}">
+        您已提交「未送达」申诉：{{task.disputeReason}}。系统已停止自动确认收货，问题解决后可手动确认送达，管理员也会介入核实。
+      </view>
+      <!-- 已确认收货：酬金走线下转账，平台不代扣，所以要等雇主自己确认「已完成转账」再关单 -->
+      <view class="sub tips" wx:if="{{task.ownerReceiptTime}}">
+        已于 {{receiptTimeText}} 确认收货。请与跑腿员线下转账结算酬金，结算完成后点击「完成任务」关闭订单。
+      </view>
+      <view class="btn-row" wx:if="{{actions.canReceipt || actions.canConfirmFinish || actions.canRejectFinish}}">
+        <button class="btn btn-primary" wx:if="{{actions.canReceipt}}" loading="{{submitting}}" bindtap="receiptFinish">确认收货</button>
+        <button class="btn btn-primary" wx:elif="{{actions.canConfirmFinish}}" bindtap="openConfirmModal">完成任务</button>
+        <button class="btn btn-danger" wx:if="{{actions.canRejectFinish}}" bindtap="openRejectModal">未送达</button>
+      </view>
+      <!-- 超时送达：雇主可一次性扣减酬金（酬金的5%，不足0.5元按0.5元），扣减后按新酬金记账 -->
+      <block wx:if="{{task.isLateDelivery}}">
+        <view class="sub tips danger" wx:if="{{task.isLateRewardDeducted}}">
+          跑腿员超过限时 {{lateText}} 才送达，已按规则扣减酬金 ¥{{task.lateRewardDeduct}}，确认送达后按扣减后的酬金记账。
+        </view>
+        <block wx:else>
+          <view class="sub tips danger">
+            跑腿员超过限时 {{lateText}} 才送达，您可先扣减酬金再确认送达：{{lateDeductText}}
+          </view>
+          <view class="btn-row" wx:if="{{actions.canDeductLateReward}}">
+            <button class="btn btn-danger" bindtap="deductLateReward">超时扣减酬金</button>
+          </view>
+        </block>
+      </block>
+    </block>
+
+    <!-- 已完成 -->
+    <block wx:if="{{task.status === 3}}">
+      <view class="sub tips">任务已完成，酬金由您与跑腿员线下结算。</view>
+    </block>
+
+    <!-- 超时取消：限时任务超时后由雇主结束（或定时任务判定），双方任务同时关闭 -->
+    <block wx:if="{{task.status === 4}}">
+      <view class="sub tips">该限时任务已超过约定时间并结束，接单者不再获得任务收入。如有纠纷可提交申诉或举报由管理员核实。</view>
+    </block>
+
+    <!-- 待支付 -->
+    <block wx:if="{{task.payStatus === 0}}">
+      <view class="sub tips">该任务尚未支付信息服务费，支付后才会在任务大厅展示。</view>
+    </block>
+  </view>
+
+  <!-- ============ 接单者视角操作区 ============ -->
+  <!-- 管理员已删除的任务：不再提供任何接单入口，避免「已下架订单仍能点接单」 -->
+  <view class="card" wx:if="{{!isOwner && !isDeleted}}">
+    <!-- 标题：只有「能接单」或「本身就是接单人」才叫接单操作，陌生人看到的是任务进展 -->
+    <view class="title">{{isTaker || task.status === 0 ? '接单操作' : '任务进展'}}</view>
+
+    <!-- 可接单 -->
+    <block wx:if="{{task.status === 0}}">
+      <view class="sub tips">接单后请在限时内送达。超过限时将自动扣减 5% 酬金（不足0.5元按0.5元），任务不会取消，仍可继续送达；恶意超时会被雇主投诉并由管理员处理。</view>
+      <!-- 按钮可用性完全由后端 actions 决定：未支付 / 已下架 / 被禁止接单 等都不展示接单按钮 -->
+      <view class="btn-row" wx:if="{{actions.canTake || actions.needCampusCert}}">
+        <button class="btn btn-primary" loading="{{submitting}}" bindtap="takeTask">立即接单</button>
+      </view>
+      <!-- 未认证 → 按钮仍展示，点击后引导去认证；其余不可接单的情况直接说明原因 -->
+      <view class="sub tips" wx:else>{{actions.takeDisabledReason || '该任务当前暂不可接单。'}}</view>
+    </block>
+
+    <!-- 进行中及之后的所有分支只有「真正的接单人」可见：
+         陌生人（既不是发布者也不是接单人）在别人的进行中任务上看到「上传物品照片 / 确认取货」，
+         会误以为要自己去取货；后端本来就会以 403 拒绝，所以这里直接不渲染 -->
+    <block wx:elif="{{isTaker}}">
+    <block wx:if="{{task.status === 1}}">
+      <!-- 已超过限时：系统已自动扣减酬金，任务不取消，可继续送达 -->
+      <view class="sub tips danger" wx:if="{{task.isOvertime}}">
+        已超过限时 {{overtimeText}}，系统已自动扣减酬金 ¥{{task.lateDeductAmount}}（酬金的5%，不足0.5元按0.5元），当前酬金 ¥{{rewardText}}。任务未取消，请尽快送达并上传送达照片。
+      </view>
+
+      <!-- 第 1 步：物品照片 + 确认取货（确认后照片落库锁定、不可修改，且不能再取消接单） -->
+      <view class="step-title">第 1 步 · 取货确认</view>
+      <block wx:if="{{pickupLocked}}">
+        <view class="lock-note">{{pickupConfirmedText}}</view>
+        <view class="img-grid" style="margin-top:16rpx" wx:if="{{task.pickupImages.length > 0}}">
+          <image wx:for="{{task.pickupImages}}" wx:key="*this" class="img-thumb" src="{{item}}" mode="aspectFill"
+                 data-source="pickupServer" data-index="{{index}}" bindtap="previewImage" />
+        </view>
+      </block>
+      <block wx:else>
+        <view class="sub tips">请拍摄你已拿到 / 买到的物品（至少1张，最多3张），点击「确认取货」后照片将被锁定，不可再修改。</view>
+        <view class="img-grid" style="margin-top:16rpx">
+          <view class="img-wrap" wx:for="{{pickupImageUrls}}" wx:key="*this">
+            <image class="img-thumb" src="{{item}}" mode="aspectFill"
+                   data-source="pickupLocal" data-index="{{index}}" bindtap="previewImage" />
+            <view class="img-del" data-index="{{index}}" catchtap="removePickupImage">×</view>
+          </view>
+          <view class="upload-box" wx:if="{{pickupImages.length < 3}}" bindtap="choosePickupImage">
+            + 上传物品照片
+          </view>
+        </view>
+        <view class="btn-row btn-row-tight">
+          <button class="btn {{pickupImages.length > 0 ? 'btn-primary' : 'btn-disabled'}}"
+                  loading="{{submitting}}" bindtap="openPickupModal">确认取货</button>
+        </view>
+      </block>
+
+      <!-- 第 2 步：送达照片 + 提交已送达（必须先完成第 1 步） -->
+      <view class="step-title">第 2 步 · 送达</view>
+      <block wx:if="{{pickupLocked}}">
+        <view class="sub tips">上传送达照片（至少1张，最多3张），证明已送达指定地址；提交后等待雇主确认收货。</view>
+        <view class="img-grid" style="margin-top:16rpx">
+          <view class="img-wrap" wx:for="{{deliveryImageUrls}}" wx:key="*this">
+            <image class="img-thumb" src="{{item}}" mode="aspectFill"
+                   data-source="local" data-index="{{index}}" bindtap="previewImage" />
+            <view class="img-del" data-index="{{index}}" catchtap="removeDeliveryImage">×</view>
+          </view>
+          <view class="upload-box" wx:if="{{deliveryImages.length < 3}}" bindtap="chooseDeliveryImage">
+            + 上传送达照片
+          </view>
+        </view>
+      </block>
+      <view class="sub tips" wx:else>请先完成第 1 步「确认取货」，完成后才会解锁送达照片上传。</view>
+
+      <!-- 提交条件：已确认取货 且 已上传送达照片（canSubmitPhotos 由 JS 统一计算） -->
+      <view class="btn-row" wx:if="{{pickupLocked}}">
+        <button class="btn {{canSubmitPhotos ? 'btn-primary' : 'btn-disabled'}}"
+                disabled="{{!canSubmitPhotos}}" loading="{{submitting}}" bindtap="submitFinish">
+          提交已送达
+        </button>
+        <button class="btn btn-plain" wx:if="{{actions.canCancelTake}}" bindtap="cancelTake">取消接单</button>
+      </view>
+      <view class="sub tips" wx:if="{{pickupLocked && !canSubmitPhotos}}">请先上传送达照片</view>
+    </block>
+
+    <!-- 待雇主确认 -->
+    <block wx:if="{{task.status === 2}}">
+      <view class="sub tips" wx:if="{{!task.isDisputed}}">已提交送达照片，等待雇主确认。超过2小时未确认将自动确认完成。</view>
+      <!-- 雇主已反馈未送达：需尽快线下联系核实 -->
+      <view class="sub tips danger" wx:if="{{task.isDisputed}}">
+        雇主反馈未正常收到：{{task.disputeReason}}。系统已停止自动确认收货，请尽快与雇主联系核实。
+      </view>
+    </block>
+
+    <!-- 已完成 -->
+    <block wx:if="{{task.status === 3}}">
+      <view class="sub tips">任务已完成，酬金已记入您的账单，请与雇主线下结算。</view>
+    </block>
+
+    <!-- 超时取消：任务已结束，不再结算收入 -->
+    <block wx:if="{{task.status === 4}}">
+      <view class="sub tips">该限时任务已超时并被结束，本次不产生任务收入。如对判定有异议可提交申诉由管理员核实。</view>
+    </block>
+
+    <!-- 雇主撤销：待接单任务被雇主撤销，任务已下架 -->
+    <block wx:if="{{task.status === 5}}">
+      <view class="sub tips">该任务已被雇主撤销并下架。</view>
+    </block>
+    </block>
+
+    <!-- 陌生人（既不是发布者也不是接单人）：任务已被他人接单，不提供任何操作入口 -->
+    <view class="sub tips" wx:else>该任务已被其他同学接单，你暂时没有可执行的操作。</view>
+  </view>
+
+  <!-- 举报入口：发布人不能举报自己的任务（canReport 由后端 actions 统一计算，雇主视角自动隐藏） -->
+  <view class="card report-card" wx:if="{{canReport}}">
+    <view class="row-between">
+      <view class="sub">发现违规行为？</view>
+      <view class="report-btn" bindtap="openReportModal">举报该任务</view>
+    </view>
+    <view class="sub tips">每条任务每人半小时内最多举报 3 次，请勿重复提交。</view>
+  </view>
+
+  <!-- 管理员操作：仅管理员账号（后端学号白名单判定）能看到，用于删除有问题 / 违规的任务 -->
+  <view class="card admin-card" wx:if="{{canDeleteTask}}">
+    <view class="row-between">
+      <view class="sub">管理员操作</view>
+      <view class="admin-delete-btn" bindtap="onDeleteTask">删除任务</view>
+    </view>
+    <view class="sub tips">删除后任务将从任务大厅、我的发布、我的任务中全部下架，并冻结全部流转操作；若任务处于「待接单」状态，信息服务费将自动原路退回。请谨慎使用。</view>
+  </view>
+
+  <page-footer />
+  <view class="safe-bottom"></view>
+</view>
+
+<view class="empty {{themeClass}} theme-root" wx:if="{{!task}}">加载中…</view>
+
+<!-- 确认送达二次确认弹窗 -->
+<view class="mask {{themeClass}}" wx:if="{{showConfirmModal}}">
+  <view class="modal">
+    <view class="modal-title">确认送达</view>
+    <view class="modal-body">请确认已收到跑腿员的送达照片并已实际收到物品，确认后任务将标记为已完成。</view>
+    <view class="modal-foot">
+      <view class="modal-btn modal-btn-cancel" bindtap="closeConfirmModal">否</view>
+      <view class="modal-btn {{confirmDisabled ? 'modal-btn-disabled' : 'modal-btn-ok'}}" bindtap="doConfirmFinish">
+        {{confirmDisabled ? '确定(' + confirmCountdown + ')' : '确定'}}
+      </view>
+    </view>
+  </view>
+</view>
+
+<!-- 结束任务二次确认弹窗：与「确认送达」同款交互，「否」始终可点，「确定」3秒倒计时后才可点 -->
+<view class="mask {{themeClass}}" wx:if="{{showEndModal}}">
+  <view class="modal">
+    <view class="modal-title">结束任务</view>
+    <view class="modal-body">该限时任务已超时。确认结束后，本次订单将立即关闭，接单者不再获得任务收入，双方任务列表同步更新。</view>
+    <view class="modal-foot">
+      <view class="modal-btn modal-btn-cancel" bindtap="closeEndModal">否</view>
+      <view class="modal-btn {{endDisabled ? 'modal-btn-disabled' : 'modal-btn-ok'}}" bindtap="doEndOvertime">
+        {{endDisabled ? '确定(' + endCountdown + ')' : '确定'}}
+      </view>
+    </view>
+  </view>
+</view>
+
+<!-- 未送达申诉弹窗：勾选标签，选「其他」时展开输入框自行填写问题原因 -->
+<view class="mask {{themeClass}}" wx:if="{{showRejectModal}}">
+  <view class="modal">
+    <view class="modal-title">反馈未送达</view>
+    <view class="modal-body">
+      <view class="sub">请选择遇到的问题（只能选一项）：</view>
+      <view class="tag-picker">
+        <view wx:for="{{rejectTags}}" wx:key="value"
+              class="tag-chip {{item.selected ? 'tag-chip-active' : ''}}"
+              data-value="{{item.value}}" bindtap="toggleRejectTag">{{item.label}}</view>
+      </view>
+
+      <!-- 勾选「其他」后显示输入框，由用户自行填写问题原因 -->
+      <block wx:if="{{needOtherText}}">
+        <textarea class="modal-textarea" maxlength="200" placeholder="请描述遇到的问题（不少于2个字）"
+                  placeholder-class="placeholder" value="{{otherText}}" bindinput="onOtherInput" />
+      </block>
+
+      <view class="sub" style="margin-top:12rpx">
+        提交后系统将停止自动确认收货，不会再把该任务自动判定为已完成；请与跑腿员协商，管理员也会介入核实。
+      </view>
+    </view>
+    <view class="modal-foot">
+      <view class="modal-btn modal-btn-cancel" bindtap="closeRejectModal">取消</view>
+      <view class="modal-btn {{canSubmitReject ? 'modal-btn-ok' : 'modal-btn-disabled'}}" bindtap="submitReject">
+        发送
+      </view>
+    </view>
+  </view>
+</view>
+
+<!-- 加酬金弹窗 -->
+<view class="mask {{themeClass}}" wx:if="{{showRewardModal}}">
+  <view class="modal">
+    <view class="modal-title">加酬金</view>
+    <view class="modal-body">
+      <input class="modal-input" type="digit" placeholder="请输入新的酬金" placeholder-class="placeholder"
+             value="{{newReward}}" bindinput="onRewardInput" />
+      <view class="sub" style="margin-top:12rpx">酬金仅可提高，不可降低，调整成功后通知跑腿员</view>
+    </view>
+    <view class="modal-foot">
+      <view class="modal-btn modal-btn-cancel" bindtap="closeRewardModal">取消</view>
+      <view class="modal-btn modal-btn-ok" bindtap="submitReward">确定</view>
+    </view>
+  </view>
+</view>
+
+<!-- 举报弹窗 -->
+<view class="mask {{themeClass}}" wx:if="{{showReportModal}}">
+  <view class="modal">
+    <view class="modal-title">举报任务</view>
+    <view class="modal-body">
+      <!-- 订单号随举报一起上报，管理员后台可直接看到是哪一单 -->
+      <view class="sub" wx:if="{{task.orderNo}}">订单号：{{task.orderNo}}</view>
+      <textarea class="modal-textarea" maxlength="200" placeholder="请描述举报原因（不少于5个字）"
+                placeholder-class="placeholder" value="{{reportReason}}" bindinput="onReportInput" />
+    </view>
+    <view class="modal-foot">
+      <view class="modal-btn modal-btn-cancel" bindtap="closeReportModal">取消</view>
+      <view class="modal-btn modal-btn-ok" bindtap="submitReport">提交</view>
+    </view>
+  </view>
+</view>
+
+<!-- 恶意超时投诉弹窗：投诉直达管理员账号，由管理员核实后决定是否封禁接单人 -->
+<view class="mask {{themeClass}}" wx:if="{{showLateReportModal}}">
+  <view class="modal">
+    <view class="modal-title">举报接单人恶意超时</view>
+    <view class="modal-body">
+      <view class="sub">请选择超时情况（只能选一项）：</view>
+      <view class="tag-picker">
+        <view wx:for="{{lateReportTags}}" wx:key="value"
+              class="tag-chip {{item.selected ? 'tag-chip-active' : ''}}"
+              data-value="{{item.value}}" bindtap="toggleLateReportTag">{{item.label}}</view>
+      </view>
+      <textarea class="modal-textarea" maxlength="150" placeholder="补充说明（可填，例如对方一直不接电话）"
+                placeholder-class="placeholder" value="{{lateReportText}}" bindinput="onLateReportInput" />
+      <view class="sub" style="margin-top:12rpx">
+        投诉将直达管理员账号，由管理员核实后决定是否封禁该接单人，请勿恶意投诉。
+      </view>
+    </view>
+    <view class="modal-foot">
+      <view class="modal-btn modal-btn-cancel" bindtap="closeLateReportModal">取消</view>
+      <view class="modal-btn {{canSubmitLateReport ? 'modal-btn-ok' : 'modal-btn-disabled'}}" bindtap="submitLateReport">发送</view>
+    </view>
+  </view>
+</view>
+
+<!-- 确认取货二次确认弹窗：接单人上传物品照片后点「确认取货」，
+     「确定」3 秒倒计时结束后才可点；确认后照片落库锁定、不能再取消接单 -->
+<view class="mask {{themeClass}}" wx:if="{{showPickupModal}}">
+  <view class="modal">
+    <view class="modal-title">确认取货</view>
+    <view class="modal-body">请确认你已实际拿到 / 买到物品。确认后物品照片将被锁定，不可再修改，同时不能再取消接单，请谨慎操作。</view>
+    <view class="modal-foot">
+      <view class="modal-btn modal-btn-cancel" bindtap="closePickupModal">取消</view>
+      <view class="modal-btn {{pickupDisabled ? 'modal-btn-disabled' : 'modal-btn-ok'}}" bindtap="doConfirmPickup">
+        {{pickupDisabled ? '确定(' + pickupCountdown + ')' : '确定'}}
+      </view>
+    </view>
+  </view>
+</view>
+
+<!-- 举报接单人弹窗：标签多选，勾选「其他」时补充说明不少于 5 个字，
+     提交后写入 report(report_type=3) 并给全部管理员推送站内消息 -->
+<view class="mask {{themeClass}}" wx:if="{{showReportTakerModal}}">
+  <view class="modal">
+    <view class="modal-title">举报接单人</view>
+    <view class="modal-body">
+      <view class="sub" wx:if="{{task.orderNo}}">订单号：{{task.orderNo}}</view>
+      <view class="sub">请选择遇到的问题（只能选一项）：</view>
+      <view class="tag-picker">
+        <view wx:for="{{reportTakerTags}}" wx:key="value"
+              class="tag-chip {{item.selected ? 'tag-chip-active' : ''}}"
+              data-value="{{item.value}}" bindtap="toggleReportTakerTag">{{item.label}}</view>
+      </view>
+      <textarea class="modal-textarea" maxlength="200" placeholder="补充说明（勾选「其他」时不少于5个字）"
+                placeholder-class="placeholder" value="{{reportTakerText}}" bindinput="onReportTakerInput" />
+      <view class="sub" style="margin-top:12rpx">举报将直达管理员账号，管理员在「举报管理」中核实处理，请勿恶意举报。</view>
+    </view>
+    <view class="modal-foot">
+      <view class="modal-btn modal-btn-cancel" bindtap="closeReportTakerModal">取消</view>
+      <view class="modal-btn {{canSubmitReportTaker ? 'modal-btn-ok' : 'modal-btn-disabled'}}" bindtap="submitReportTaker">提交</view>
+    </view>
+  </view>
+</view>

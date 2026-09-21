@@ -1,0 +1,62 @@
+<!-- 设置 / 修改密保问题：注册后强制设置，也用于个人中心主动修改 -->
+<view class="container {{themeClass}} theme-root">
+  <!-- 全局通知条：管理员发布的公告，可关闭（本次会话内不再出现） -->
+  <notice-bar />
+
+  <!-- 前置须知：用警告色强调「必须先设置」，而不是错误提示 -->
+  <view class="notice">
+    <view class="notice-title">{{isModify ? '修改密保问题' : '设置密保问题'}}</view>
+    <view class="notice-line" wx:if="{{!isModify}}">
+      为确保账号安全，注册后必须先设置 2 道密保问题才能使用小程序。
+    </view>
+    <view class="notice-line" wx:if="{{isModify}}">
+      当前密保状态：{{securityStatusText}}。修改前需先答对现有密保问题。
+    </view>
+    <view class="notice-line">
+      密保问题用于「忘记密码」和「新设备登录解锁」，可选题库内置题，也可自行填写自定义问题；
+      答案请设置成只有你自己知道的（至少{{minAnswerLen}}个字符）。
+    </view>
+  </view>
+
+  <!-- 修改模式：先验证当前密保（展示的是账号当前已设置的题目，与下方新密保互不影响） -->
+  <view class="card" wx:if="{{isModify}}">
+    <view class="card-title">当前密保验证</view>
+    <view class="qa-block" wx:for="{{currentQuestions}}" wx:key="index">
+      <view class="qa-label">问题{{index + 1}}</view>
+      <view class="qa-question-text">{{item}}</view>
+      <view class="qa-label">答案{{index + 1}}</view>
+      <input class="form-input qa-input" value="{{currentAnswers[index]}}" data-index="{{index}}"
+             bindinput="onCurrentAnswerInput" placeholder="请填写当前答案" placeholder-class="placeholder" />
+    </view>
+  </view>
+
+  <!-- 新的密保问题与答案：上方是问题，下方是答案 -->
+  <view class="card">
+    <view class="card-title">{{isModify ? '新的密保问题' : '密保问题设置'}}</view>
+
+    <view class="qa-block" wx:for="{{qIndex}}" wx:key="index">
+      <view class="qa-label">问题{{index + 1}}</view>
+      <picker mode="selector" range="{{pickerRange}}" value="{{pickerValue[index]}}"
+              data-index="{{index}}" bindchange="onQuestionChange">
+        <view class="picker-value">
+          <text class="picker-text">{{qText[index]}}</text>
+          <text class="picker-arrow">▾</text>
+        </view>
+      </picker>
+      <input wx:if="{{qIndex[index] === customIndex}}" class="form-input qa-input qa-custom-input"
+             value="{{qCustom[index]}}" data-index="{{index}}" bindinput="onCustomQuestionInput"
+             maxlength="{{maxQuestionLen}}" placeholder="请填写自定义问题（{{minQuestionLen}}-{{maxQuestionLen}}个字符）"
+             placeholder-class="placeholder" />
+
+      <view class="qa-label qa-label-answer">答案{{index + 1}}</view>
+      <input class="form-input qa-input" value="{{answers[index]}}" data-index="{{index}}"
+             bindinput="onAnswerInput" placeholder="请填写答案（去空格、不区分大小写）" placeholder-class="placeholder" />
+    </view>
+  </view>
+
+  <button class="btn btn-primary submit" bindtap="doSubmit" disabled="{{submitting}}">
+    {{isModify ? '确认修改' : '完成设置并开始使用'}}
+  </button>
+
+  <page-footer />
+</view>

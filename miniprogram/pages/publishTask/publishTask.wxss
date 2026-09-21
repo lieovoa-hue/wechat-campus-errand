@@ -1,0 +1,331 @@
+/* =====================================================================
+   发布任务（v6）
+   ---------------------------------------------------------------------
+   结构：快捷模板（单行 4 枚胶囊） → 任务信息（分组表单） → 相关图片
+        → 费用与规则 → 固定底栏（服务费 + 主按钮）
+   设计依据：docs/page-design-v1.md 第 06 页
+   所有颜色 / 字号 / 间距 / 圆角 / 动效均取 app.wxss v6 令牌，页面内不写裸 hex。
+   ===================================================================== */
+
+/* ---------------------------------------------------- 分组标题 */
+.sec-head {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--sp-5);
+}
+
+.sec-bar {
+  flex: none;
+  width: 6rpx;
+  height: 28rpx;
+  margin-right: var(--sp-3);
+  border-radius: 3rpx;
+  background: var(--brand);
+}
+
+.sec-title {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.sec-hint {
+  margin-left: auto;
+  font-size: var(--fs-sm);
+  color: var(--text-4);
+}
+
+/* ---------------------------------------------------- ① 快捷模板 */
+.tpl-row {
+  display: flex;
+  gap: var(--sp-2);
+}
+
+.tpl-card {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--sp-4) 0;
+  background: var(--surface-2);
+  border: 2rpx solid transparent;
+  border-radius: var(--radius-m);
+  transition: transform var(--dur-fast) var(--ease-out),
+              background var(--dur-base) var(--ease-out),
+              border-color var(--dur-base) var(--ease-out);
+}
+
+.tpl-card-on {
+  background: var(--brand-soft);
+  border-color: var(--brand-line);
+}
+
+.tpl-card-hover {
+  transform: scale(.95);
+}
+
+.tpl-ico-box {
+  width: 96rpx;
+  height: 96rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tpl-img {
+  /* 抠好的彩色插画（已去白底与水印）：本身带色，选中态不再做反白，
+     选中与否靠卡片的淡蓝底 + 描边表达 */
+  width: 96rpx;
+  height: 96rpx;
+}
+
+.tpl-name {
+  margin-top: var(--sp-3);
+  font-size: var(--fs-cap);
+  font-weight: 600;
+  color: var(--text-1);
+  white-space: nowrap;
+}
+
+/* 单行 4 枚胶囊宽度有限，预置摘要（限时 / 酬金）在列表页展示，
+   这里只保留名称，避免文字被压成两行或溢出 */
+.tpl-meta {
+  display: none;
+}
+
+/* 「免费代拿次数^N」角标：锚在胶囊右上角，缩放后不占布局宽度 */
+.tpl-badge {
+  position: absolute;
+  top: -14rpx;
+  right: -6rpx;
+  height: 34rpx;
+  line-height: 34rpx;
+  padding: 0 12rpx;
+  font-size: var(--fs-cap);
+  font-weight: 600;
+  color: var(--brand-on);
+  white-space: nowrap;
+  background: var(--accent);
+  border-radius: var(--radius-pill);
+  transform: scale(.72);
+  transform-origin: 100% 0;
+  box-shadow: 0 2rpx 8rpx rgba(238, 108, 45, .35);
+}
+
+.tpl-note {
+  margin-top: var(--sp-5);
+  padding: var(--sp-4) var(--sp-5);
+  font-size: var(--fs-sm);
+  line-height: 1.7;
+  color: var(--text-2);
+  background: var(--brand-soft);
+  border-radius: var(--radius-m);
+}
+
+/* ---------------------------------------------------- ② 表单 */
+/* 当前模板提示条：浅色底 + 品牌色描边的小字，放在表单字段之上，
+   说明「这一项为什么必填」，切换模板时只换文案，不挪字段位置 */
+.form-tip {
+  margin-bottom: var(--sp-4);
+  padding: var(--sp-3) var(--sp-4);
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+  color: var(--brand);
+  background: var(--brand-soft);
+  border-radius: var(--radius-m);
+  border-left: 6rpx solid var(--brand);
+}
+
+.req {
+  color: var(--danger);
+  margin-right: 4rpx;
+}
+
+/* 上标签 + 下输入：长地址不会被挤成一团 */
+.form-block {
+  padding: var(--sp-4) 0;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.form-block:last-child {
+  border-bottom: none;
+}
+
+.form-input-block {
+  width: 100%;
+  height: 80rpx;
+  margin-top: var(--sp-3);
+  padding: 0 var(--sp-5);
+  box-sizing: border-box;
+  font-size: var(--fs-md);
+  color: var(--text-1);
+  background: var(--surface-2);
+  border: 2rpx solid transparent;
+  border-radius: var(--radius-m);
+  transition: border-color var(--dur-base) var(--ease-out),
+              background var(--dur-base) var(--ease-out);
+}
+
+/* 酬金 / 限时并排：两个短数字字段共用一行 */
+.form-duo {
+  display: flex;
+  gap: var(--sp-4);
+  padding: var(--sp-4) 0 0;
+}
+
+.duo-item {
+  flex: 1;
+  min-width: 0;
+}
+
+.duo-input {
+  width: 100%;
+  height: 80rpx;
+  margin-top: var(--sp-3);
+  padding: 0 var(--sp-5);
+  box-sizing: border-box;
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--text-1);
+  background: var(--surface-2);
+  border: 2rpx solid transparent;
+  border-radius: var(--radius-m);
+}
+
+/* 酬金框用主色描边强调必填（限时可选，保持中性） */
+.duo-item:first-child .duo-input {
+  border-color: var(--brand-line);
+  background: var(--surface);
+}
+
+.form-note {
+  padding: var(--sp-3) 0 0;
+  font-size: var(--fs-sm);
+  color: var(--text-4);
+  line-height: 1.6;
+}
+
+/* ---------------------------------------------------- ③ 图片 */
+.upload-ico {
+  color: var(--text-3);
+}
+
+.upload-text {
+  margin-top: var(--sp-2);
+  font-size: var(--fs-cap);
+  color: var(--text-3);
+}
+
+.upload-box {
+  flex-direction: column;
+}
+
+.upload-box-hover {
+  background: var(--brand-soft);
+  border-color: var(--brand-line);
+}
+
+.img-del-ico {
+  color: var(--brand-on);
+  transform: scale(.62);
+}
+
+/* ---------------------------------------------------- ④ 费用与规则 */
+.rule-item {
+  position: relative;
+  padding-left: var(--sp-5);
+  font-size: var(--fs-sm);
+  line-height: 1.9;
+  color: var(--text-3);
+}
+
+.rule-item::before {
+  content: '';
+  position: absolute;
+  left: 2rpx;
+  top: 20rpx;
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 50%;
+  background: var(--gray-3);
+}
+
+.free-tip {
+  margin-top: var(--sp-4);
+  padding: var(--sp-4) var(--sp-5);
+  font-size: var(--fs-sm);
+  line-height: 1.7;
+  color: var(--success);
+  background: var(--success-soft);
+  border-radius: var(--radius-m);
+}
+
+.free-cancel {
+  margin-left: var(--sp-3);
+  color: var(--brand-deep);
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------- ⑤ 固定底栏 */
+/* 底部预留高度，避免最后一张卡片被固定栏压住 */
+.pub-foot-space {
+  height: 200rpx;
+}
+
+.pub-foot {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+  padding: var(--sp-4) var(--page-pad) calc(var(--sp-4) + env(safe-area-inset-bottom));
+  background: var(--surface);
+  border-top: 1rpx solid var(--line);
+  box-shadow: 0 -6rpx 20rpx rgba(15, 23, 42, .06);
+}
+
+.pub-foot-fee {
+  flex: none;
+  min-width: 0;
+}
+
+.pub-foot-label {
+  display: block;
+  font-size: var(--fs-cap);
+  color: var(--text-3);
+}
+
+.pub-foot-amount {
+  display: block;
+  margin-top: 2rpx;
+  font-size: var(--fs-title);
+  font-weight: 700;
+  color: var(--money);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 使用邀请权益时金额转绿，并加一行「已抵扣」说明 */
+.pub-foot-amount.is-free {
+  color: var(--success);
+}
+
+.pub-foot-btn {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-md);
+  padding: 0 var(--sp-5);
+}
+
+/* ---------------------------------------------------- 动效降级 */
+@media (prefers-reduced-motion: reduce) {
+  .tpl-card,
+  .tpl-ico-box,
+  .form-input-block {
+    transition-duration: 1ms;
+  }
+}

@@ -1,0 +1,328 @@
+/* =====================================================================
+   我的 · 个人中心（v6）
+   ---------------------------------------------------------------------
+   结构：资料卡（品牌柔光顶 + 头像 + 昵称 + 认证徽章 + 账号 ID 可复制 + 邀请码）
+        → 资料明细行 → 功能分组 → 退出登录 / 注销账号
+   设计依据：docs/page-design-v1.md 第 14 页
+   ===================================================================== */
+
+.container {
+  padding-top: var(--sp-5);
+}
+
+.submit {
+  margin-top: var(--sp-6);
+}
+
+/* ---------------------------------------------------- 资料卡 */
+.profile-card {
+  position: relative;
+  overflow: hidden;
+  padding-top: var(--sp-8);
+}
+
+/* 顶部一层品牌柔光：用渐变收到卡片白底，避免「整块蓝」压住文字 */
+.profile-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 220rpx;
+  background: linear-gradient(160deg, var(--brand-soft) 0%, var(--surface) 100%);
+  z-index: 0;
+}
+
+.profile-card .row,
+.profile-card .userid-box,
+.profile-card .info-row {
+  position: relative;
+  z-index: 1;
+}
+
+.avatar {
+  width: 112rpx;
+  height: 112rpx;
+  flex: none;
+  border-radius: 50%;
+  background: var(--brand-soft);
+  /* 白色内圈 + 品牌淡环，头像「浮」在柔光底上更有层次 */
+  box-shadow: 0 0 0 6rpx var(--surface), 0 6rpx 18rpx rgba(15, 23, 42, .10);
+}
+
+.avatar-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fs-title);
+  font-weight: 700;
+  color: var(--brand);
+}
+
+/* 资料卡头部：.row 本身没有 gap，头像与右侧文字之间必须显式留间距，
+   否则头像会直接「贴」在昵称上（视觉上像挤在一起）。 */
+.profile-card .row {
+  gap: var(--sp-5);
+  align-items: center;
+}
+
+.info {
+  min-width: 0;
+}
+
+/* 昵称行：昵称 + 管理员徽标，用 gap 统一控制间距（不再用 margin-left，避免双份间距） */
+.nickname {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-width: 0;
+  font-size: var(--fs-title);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--text-1);
+}
+
+/* 昵称过长时省略号收尾，不把管理员徽标挤出屏幕 */
+.nickname-name {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.nickname .tag {
+  margin-left: 0;
+}
+
+/* 昵称与手机号之间留一点行距，两行不再黏在一起 */
+.info .sub {
+  margin-top: var(--sp-2);
+  line-height: 1.4;
+}
+
+/* ---------------------------------------------------- 账号 ID（醒目 + 可复制） */
+.userid-box {
+  display: flex;
+  align-items: center;
+  margin-top: var(--sp-6);
+  padding: var(--sp-5);
+  background: var(--surface);
+  border: 2rpx solid var(--brand-line);
+  border-radius: var(--radius-m);
+  transition: transform var(--dur-fast) var(--ease-out),
+              background var(--dur-fast) var(--ease-out);
+}
+
+.userid-box-hover {
+  transform: scale(.98);
+  background: var(--brand-soft);
+}
+
+.userid-label {
+  flex: none;
+  font-size: var(--fs-cap);
+  color: var(--text-3);
+}
+
+.userid-value {
+  margin-left: var(--sp-4);
+  font-size: 44rpx;
+  font-weight: 700;
+  letter-spacing: 3rpx;
+  line-height: 1.2;
+  color: var(--brand-deep);
+  font-variant-numeric: tabular-nums;
+}
+
+.userid-tip {
+  margin-left: auto;
+  font-size: var(--fs-cap);
+  color: var(--brand);
+}
+
+/* ---------------------------------------------------- 资料明细行 */
+/* 分组小标题：与上方「账号 ID」框拉开距离，把小标题当成下一块内容的入口 */
+.info-title {
+  margin-top: var(--sp-8);
+  padding-bottom: var(--sp-1);
+  font-size: var(--fs-cap);
+  font-weight: 600;
+  letter-spacing: 1rpx;
+  color: var(--text-4);
+}
+
+/* 明细行：标签列固定宽度 + 统一行高，右侧文本与徽标一律落在同一条竖线上 */
+.info-row {
+  display: flex;
+  align-items: center;
+  min-height: 88rpx;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+/* 徽标在明细行里不再缩进：与「手机号 / 学号 / 邀请码」等文本左边缘完全对齐 */
+.info-row .tag {
+  margin-left: 0;
+}
+
+.info-label {
+  flex: none;
+  width: 160rpx;
+  font-size: var(--fs-md);
+  color: var(--text-3);
+}
+
+.info-value {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-md);
+  color: var(--text-1);
+  word-break: break-all;
+}
+
+.info-value-row {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.copy-chip {
+  flex: none;
+  margin-left: var(--sp-3);
+  padding: 2rpx 14rpx;
+  font-size: var(--fs-cap);
+  line-height: 1.6;
+  color: var(--brand-deep);
+  background: var(--brand-soft);
+  border-radius: var(--radius-pill);
+}
+
+/* ---------------------------------------------------- 功能分组 */
+.group-card {
+  padding: var(--sp-2) var(--sp-8);
+}
+
+.entry {
+  display: flex;
+  align-items: center;
+  min-height: 96rpx;
+  border-bottom: 1rpx solid var(--line);
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.entry:last-child {
+  border-bottom: none;
+}
+
+.entry-press {
+  background: var(--surface-2);
+}
+
+.entry-name {
+  position: relative;
+  padding-left: var(--sp-5);
+  font-size: var(--fs-md);
+  color: var(--text-1);
+}
+
+/* 每个功能前的品牌小圆点：比整行图标轻，但能形成整齐的左对齐锚点 */
+.entry-name::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 10rpx;
+  height: 10rpx;
+  margin-top: -5rpx;
+  border-radius: 50%;
+  background: var(--brand-line);
+}
+
+.arrow {
+  margin-left: auto;
+  font-size: var(--fs-sm);
+  color: var(--text-4);
+}
+
+/* ---------------------------------------------------- 底部操作 */
+.logout {
+  margin-top: var(--sp-6);
+}
+
+/* 注销账号：低饱和危险色文字按钮，避免与「退出登录」抢注意力又足够醒目 */
+.deactivate-btn {
+  margin-top: var(--sp-4);
+  background: transparent;
+  color: var(--danger);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.deactivate-btn.button-hover,
+.deactivate-btn:active {
+  background: var(--danger-soft);
+}
+
+/* ---------------------------------------------------- 注销确认弹窗 */
+.deactivate-warn {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--danger);
+  line-height: 1.6;
+}
+
+.deactivate-list {
+  margin-top: var(--sp-4);
+  font-size: var(--fs-sm);
+  line-height: 1.9;
+  color: var(--text-3);
+}
+
+.deactivate-tip {
+  margin-top: var(--sp-5);
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+}
+
+.deactivate-ok {
+  background: var(--danger);
+  color: var(--text-on-dark);
+}
+
+/* ---------------------------------------------------- 动效降级 */
+@media (prefers-reduced-motion: reduce) {
+  .userid-box,
+  .entry {
+    transition-duration: 1ms;
+  }
+}
+
+/* ---------------------------------------------------- 消息中心未读角标 */
+.entry-tail {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+.entry-tail .arrow {
+  margin-left: var(--sp-2);
+}
+
+.entry-badge {
+  min-width: 36rpx;
+  height: 36rpx;
+  padding: 0 10rpx;
+  box-sizing: border-box;
+  border-radius: var(--radius-pill);
+  background: var(--danger-fill);
+  color: var(--text-on-dark);
+  font-size: 22rpx;
+  line-height: 36rpx;
+  font-weight: 600;
+  text-align: center;
+}

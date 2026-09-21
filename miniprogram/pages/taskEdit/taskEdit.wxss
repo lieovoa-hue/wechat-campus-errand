@@ -1,0 +1,94 @@
+/* =====================================================================
+   编辑任务（v7）
+   ---------------------------------------------------------------------
+   同一页面承载两种形态：
+     · 待接单（status=0）：全量字段可编辑，酬金只能提高或持平
+     · 进行中（status=1）：送达地址 / 限时 锁死（只读展示），
+       收件人 / 电话 / 取件码或帮带物品 / 详细地址 / 备注 仍可更正，酬金只升不降
+   设计依据：docs/page-design-v1.md 第 11 页
+   ===================================================================== */
+
+/* ---------------------------------------------------- 顶部提示条
+   编辑规则是「容易踩坑」的约束（3 分钟频率、状态变更即失败），
+   用警告色淡底前置说明，而不是塞在表单下方当小字。 */
+.rule-note {
+  position: relative;
+  margin-bottom: var(--sp-5);
+  padding: var(--sp-4) var(--sp-5) var(--sp-4) var(--sp-7);
+  background: var(--warn-soft);
+  border: 1rpx solid var(--warn-line);
+  border-radius: var(--radius-m);
+  font-size: var(--fs-sm);
+  line-height: 40rpx;
+  color: var(--warn);
+}
+
+.rule-note::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: var(--sp-4);
+  bottom: var(--sp-4);
+  width: 8rpx;
+  border-radius: 0 4rpx 4rpx 0;
+  background: var(--warn-fill);
+}
+
+/* 订单号：编辑时对齐「改的是哪一单」，等宽感更强，方便与后台核对 */
+.order-no {
+  margin-top: var(--sp-2);
+  font-size: var(--fs-sm);
+  color: var(--text-3);
+  letter-spacing: .5rpx;
+}
+
+/* ---------------------------------------------------- 表单 */
+.form-item-area {
+  align-items: flex-start;
+  padding-top: var(--sp-5);
+}
+
+.form-textarea {
+  flex: 1;
+  min-height: 140rpx;
+  font-size: var(--fs-md);
+  line-height: 1.6;
+}
+
+/* 酬金提示：紧贴在酬金输入行下方，是用户最容易忽略的约束 */
+.form-tip {
+  display: block;
+  margin-top: var(--sp-3);
+  padding: var(--sp-3) var(--sp-5);
+  background: var(--warn-soft);
+  border-radius: var(--radius-s);
+  font-size: var(--fs-sm);
+  color: var(--warn);
+  line-height: 1.6;
+}
+
+.submit {
+  margin: var(--sp-6) 0 var(--sp-4);
+}
+
+/* ---------------------------------------------------- 进行中：锁定态说明 + 只读字段
+   锁定的两个字段不是「隐藏」而是「显示但不可改」：用户需要看到接单人看到的地址，
+   否则会以为信息丢了；灰底 + 弱化文字是系统里统一的「只读」语言。 */
+.lock-note {
+  display: block;
+  margin-top: var(--sp-3);
+  padding: var(--sp-3) var(--sp-5);
+  background: var(--brand-soft);
+  border-radius: var(--radius-s);
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+  color: var(--brand-deep);
+}
+
+.form-input-locked {
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--surface-2);
+  border-radius: var(--radius-s);
+  color: var(--text-3);
+  line-height: 1.5;
+}

@@ -1,0 +1,46 @@
+{
+  "name": "campus-errand-backend",
+  "version": "1.0.0",
+  "description": "校园跑腿小程序后端服务（Express + MySQL8 + mysql2/promise + JWT 双令牌）",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js",
+    "check": "node scripts/checkAll.js",
+    "check:admin": "node scripts/checkAdminStatus.js",
+    "check:mp": "node scripts/checkMiniProgram.js",
+    "check:mp-bindings": "node scripts/checkMiniProgramBindings.js",
+    "check:mp-runtime": "node scripts/checkPageRuntime.js",
+    "check:mp-lifecycle": "node scripts/checkPageLifecycle.js",
+    "check:mp-integration": "node scripts/checkPageIntegration.js",
+    "test:db": "node scripts/initTestDb.js",
+    "test:smoke": "node scripts/smokeTest.js",
+    "test:schedule": "node scripts/scheduleTest.js",
+    "test:api": "node scripts/apiCoverageTest.js",
+    "test:kick": "node scripts/regression-kick-device.js",
+    "test:security": "node scripts/regression-account-security.js",
+    "test:admin": "node scripts/regression-admin-login.js",
+    "test:business": "node scripts/regression-business-flow.js",
+    "test:coupon": "node scripts/regression-coupon-pay.js",
+    "test:message-badge": "node scripts/regression-message-badge.js",
+    "test:media": "node scripts/regression-media-security.js",
+    "test:garbage": "node scripts/regression-garbage-cleaner.js"
+  },
+  "keywords": ["campus", "errand", "express", "mysql"],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2",
+    "mysql2": "^3.14.4",
+    "node-schedule": "^2.1.1"
+  },
+  "optionalDependencies": {
+    "bcrypt": "^5.1.1"
+  }
+}

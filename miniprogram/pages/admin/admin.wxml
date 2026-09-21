@@ -1,0 +1,942 @@
+<!-- =====================================================================
+     管理员后台：审核管理 / 申诉管理 / 举报管理 / 用户管理
+     仅后端硬编码学号白名单用户可访问（接口层 adminAuth 二次校验）
+     ===================================================================== -->
+<view class="page {{themeClass}} theme-root">
+  <!-- 全局通知条：管理员发布的公告，可关闭（本次会话内不再出现） -->
+  <notice-bar />
+  <!-- 统一确认弹窗（自绘，深色自适应）：由 utils/dialog.js 通过 selectComponent 调用 -->
+  <confirm-dialog id="confirmDialog" />
+
+  <!-- 顶部一级 Tab -->
+  <view class="tabs">
+    <view class="tab {{tab === 'audit' ? 'tab-on' : ''}}" data-tab="audit" bindtap="onTabChange">审核管理</view>
+    <view class="tab {{tab === 'appeal' ? 'tab-on' : ''}}" data-tab="appeal" bindtap="onTabChange">申诉管理</view>
+    <view class="tab {{tab === 'report' ? 'tab-on' : ''}}" data-tab="report" bindtap="onTabChange">举报管理</view>
+    <view class="tab {{tab === 'order' ? 'tab-on' : ''}}" data-tab="order" bindtap="onTabChange">订单管理</view>
+    <view class="tab {{tab === 'ban' ? 'tab-on' : ''}}" data-tab="ban" bindtap="onTabChange">封禁管理</view>
+    <view class="tab {{tab === 'user' ? 'tab-on' : ''}}" data-tab="user" bindtap="onTabChange">用户管理</view>
+    <view class="tab {{tab === 'announce' ? 'tab-on' : ''}}" data-tab="announce" bindtap="onTabChange">公告</view>
+  </view>
+
+  <!-- ==================== 审核管理 ==================== -->
+  <block wx:if="{{tab === 'audit'}}">
+    <view class="sub-tabs">
+      <view
+        wx:for="{{auditTabs}}"
+        wx:key="value"
+        class="sub-tab {{auditStatus === item.value ? 'sub-tab-on' : ''}}"
+        data-value="{{item.value}}"
+        bindtap="onAuditStatusChange"
+      >{{item.label}}</view>
+    </view>
+
+    <view class="list">
+      <!-- 批量删除条：勾选后可一键清理历史记录（进行中的记录由后端自动跳过） -->
+      <view class="batch-bar">
+        <view class="batch-all" bindtap="batchSelectAll" data-module="audit">
+          <view class="batch-box {{batch.audit.all ? 'batch-box-on' : ''}}"></view>
+          <text class="batch-all-txt">{{selectAllText}}</text>
+        </view>
+        <text class="batch-count">{{batch.audit.text}}</text>
+        <view class="batch-del" bindtap="batchDelete" data-module="audit">{{batchDeleteText}}</view>
+      </view>
+      <view class="card" wx:for="{{audits}}" wx:key="id">
+        <view class="batch-box batch-box-card {{item._sel ? 'batch-box-on' : ''}}"
+              data-module="audit" data-id="{{item.id}}" catchtap="batchToggle"></view>
+        <view class="card-head">
+          <text class="card-title">{{item.typeText}}</text>
+          <text class="tag {{item.status === 1 ? 'tag-warn' : (item.status === 2 ? 'tag-success' : 'tag-danger')}}">{{item.statusText}}</text>
+        </view>
+
+        <view class="row"><text class="label">申请编号</text><text class="value">{{item.id}}</text></view>
+        <view class="row"><text class="label">申请人</text><text class="value">{{item.nickname}}（账号 {{item.user_id}}）</text></view>
+        <view class="row"><text class="label">登录手机</text><text class="value">{{item.phone}}</text></view>
+        <view class="row" wx:if="{{item.student_id}}"><text class="label">当前学号</text><text class="value">{{item.student_id}}</text></view>
+        <view class="row"><text class="label">提交时间</text><text class="value">{{item.timeText}}</text></view>
+
+        <!-- 校园认证额外字段 -->
+        <block wx:if="{{item.apply_type === 3}}">
+          <view class="row"><text class="label">真实姓名</text><text class="value">{{item.cert_name}}</text></view>
+          <view class="row"><text class="label">真实学号</text><text class="value">{{item.cert_student_id}}</text></view>
+          <view class="row"><text class="label">联系手机</text><text class="value">{{item.cert_phone}}</text></view>
+        </block>
+
+        <!-- 头像 / 校园认证：图片凭证 -->
+        <view class="img-box" wx:if="{{item.apply_type === 1 || item.apply_type === 3}}">
+          <image
+            class="proof-img"
+            src="{{item.contentImage}}"
+            mode="aspectFill"
+            data-url="{{item.contentImage}}"
+            bindtap="previewImage"
+          />
+          <text class="img-tip">点击可放大查看</text>
+        </view>
+
+        <!-- 昵称：文本凭证 -->
+        <view class="row" wx:if="{{item.apply_type === 2}}">
+          <text class="label">新昵称</text><text class="value">{{item.apply_content}}</text>
+        </view>
+
+        <view class="row" wx:if="{{item.reject_reason}}">
+          <text class="label">驳回原因</text><text class="value value-danger">{{item.reject_reason}}</text>
+        </view>
+
+        <view class="card-foot" wx:if="{{item.status === 1}}">
+          <button class="btn btn-plain" size="mini" data-id="{{item.id}}" bindtap="rejectAudit">驳回</button>
+          <button class="btn btn-primary" size="mini" data-id="{{item.id}}" bindtap="approveAudit">通过</button>
+        </view>
+      </view>
+
+      <view class="empty" wx:if="{{!audits.length && !loading}}">暂无审核申请</view>
+    </view>
+  </block>
+  <!-- ==================== 申诉管理 ==================== -->
+  <block wx:if="{{tab === 'appeal'}}">
+    <view class="sub-tabs">
+      <view
+        wx:for="{{statusTabs}}"
+        wx:key="label"
+        class="sub-tab {{appealStatus === item.value ? 'sub-tab-on' : ''}}"
+        data-field="appealStatus"
+        data-value="{{item.value}}"
+        bindtap="onStatusChange"
+      >{{item.label}}</view>
+    </view>
+
+    <view class="list">
+      <!-- 批量删除条：勾选后可一键清理历史记录（进行中的记录由后端自动跳过） -->
+      <view class="batch-bar">
+        <view class="batch-all" bindtap="batchSelectAll" data-module="appeal">
+          <view class="batch-box {{batch.appeal.all ? 'batch-box-on' : ''}}"></view>
+          <text class="batch-all-txt">{{selectAllText}}</text>
+        </view>
+        <text class="batch-count">{{batch.appeal.text}}</text>
+        <view class="batch-del" bindtap="batchDelete" data-module="appeal">{{batchDeleteText}}</view>
+      </view>
+      <view class="card" wx:for="{{appeals}}" wx:key="id">
+        <view class="batch-box batch-box-card {{item._sel ? 'batch-box-on' : ''}}"
+              data-module="appeal" data-id="{{item.id}}" catchtap="batchToggle"></view>
+        <view class="card-head">
+          <text class="card-title">申诉编号 {{item.id}}</text>
+          <text class="tag {{item.status === 1 ? 'tag-warn' : 'tag-success'}}">{{item.statusText}}</text>
+        </view>
+        <view class="row"><text class="label">申诉人</text><text class="value">{{item.nickname}}（账号 {{item.user_id}}）</text></view>
+        <view class="row"><text class="label">学号</text><text class="value">{{item.student_id}}</text></view>
+        <view class="row"><text class="label">提交时间</text><text class="value">{{item.timeText}}</text></view>
+        <view class="block-text">
+          <text class="label">申诉内容</text>
+          <text class="content">{{item.content}}</text>
+        </view>
+        <view class="block-text" wx:if="{{item.admin_reply}}">
+          <text class="label">管理员回复</text>
+          <text class="content content-reply">{{item.admin_reply}}</text>
+        </view>
+
+        <view class="card-foot" wx:if="{{item.status === 1}}">
+          <button class="btn btn-primary" size="mini" data-id="{{item.id}}" bindtap="replyAppeal">回复申诉</button>
+        </view>
+      </view>
+
+      <view class="empty" wx:if="{{!appeals.length && !loading}}">暂无申诉记录</view>
+    </view>
+  </block>
+
+  <!-- ==================== 举报管理 ==================== -->
+  <block wx:if="{{tab === 'report'}}">
+    <!-- 举报类型筛选：普通举报 / 恶意超时投诉 -->
+    <view class="sub-tabs">
+      <view
+        wx:for="{{reportTypeTabs}}"
+        wx:key="label"
+        class="sub-tab {{reportType === item.value ? 'sub-tab-on' : ''}}"
+        data-field="reportType"
+        data-value="{{item.value}}"
+        bindtap="onStatusChange"
+      >{{item.label}}</view>
+    </view>
+    <view class="sub-tabs">
+      <view
+        wx:for="{{statusTabs}}"
+        wx:key="label"
+        class="sub-tab {{reportStatus === item.value ? 'sub-tab-on' : ''}}"
+        data-field="reportStatus"
+        data-value="{{item.value}}"
+        bindtap="onStatusChange"
+      >{{item.label}}</view>
+    </view>
+
+    <view class="list">
+      <!-- 批量删除条：勾选后可一键清理历史记录（进行中的记录由后端自动跳过） -->
+      <view class="batch-bar">
+        <view class="batch-all" bindtap="batchSelectAll" data-module="report">
+          <view class="batch-box {{batch.report.all ? 'batch-box-on' : ''}}"></view>
+          <text class="batch-all-txt">{{selectAllText}}</text>
+        </view>
+        <text class="batch-count">{{batch.report.text}}</text>
+        <view class="batch-del" bindtap="batchDelete" data-module="report">{{batchDeleteText}}</view>
+      </view>
+      <view class="card" wx:for="{{reports}}" wx:key="id">
+        <view class="batch-box batch-box-card {{item._sel ? 'batch-box-on' : ''}}"
+              data-module="report" data-id="{{item.id}}" catchtap="batchToggle"></view>
+        <view class="card-head">
+          <text class="card-title">举报编号 {{item.id}}</text>
+          <text class="tag {{item.status === 1 ? 'tag-warn' : 'tag-success'}}">{{item.statusText}}</text>
+        </view>
+
+        <!-- 订单号：GCPT+数字，举报时随举报一起上报，管理员据此定位到具体订单 -->
+        <view class="row">
+          <text class="label">订单号</text>
+          <text class="value value-primary">{{item.orderNo || '暂无'}}</text>
+        </view>
+        <view class="row">
+          <text class="label">举报类型</text>
+          <text class="value {{item.isLateReport ? 'value-danger' : ''}}">{{item.reportTypeText}}</text>
+        </view>
+        <view class="row"><text class="label">被举报任务</text><text class="value">任务 #{{item.taskId}}</text></view>
+
+        <!-- 三方用户统一用 mini 卡片展示（头像 + 角色 + 昵称 + 身份标识 + 账号ID + 学号）
+             点击任意一张卡片即可查看该用户的全部资料，管理员可直接修改 -->
+        <view class="mini-title">相关人员 · 点击卡片查看该用户全部资料</view>
+        <view class="person-cards">
+          <user-card person="{{item.ownerPerson}}" clickable bind:usertap="onUserCardTap" />
+          <user-card wx:if="{{item.takerPerson}}" person="{{item.takerPerson}}" clickable bind:usertap="onUserCardTap" />
+          <user-card person="{{item.reporterPerson}}" clickable bind:usertap="onUserCardTap" />
+        </view>
+        <!-- 手机号单独列出：管理员联系当事人时必须看到完整号码 -->
+        <view class="row"><text class="label">雇主手机</text><text class="value">{{item.ownerPhone || '未填'}}</text></view>
+        <view class="row" wx:if="{{item.takerUserId}}"><text class="label">接单人手机</text><text class="value">{{item.takerPhone || '未填'}}</text></view>
+        <view class="row"><text class="label">举报人手机</text><text class="value">{{item.reporterPhone || '未填'}}</text></view>
+
+        <view class="row"><text class="label">送达地址</text><text class="value">{{item.deliverAddress}}</text></view>
+        <view class="row"><text class="label">提交时间</text><text class="value">{{item.timeText}}</text></view>
+        <view class="block-text">
+          <text class="label">举报原因</text>
+          <text class="content">{{item.reportReason}}</text>
+        </view>
+        <view class="block-text" wx:if="{{item.adminNote}}">
+          <text class="label">处理说明</text>
+          <text class="content content-reply">{{item.adminNote}}</text>
+        </view>
+
+        <!-- 一键复制整条举报（订单号 + 三方账号/学号/手机号 + 举报原因），便于转交客服或上级处理 -->
+        <view class="copy-line" data-id="{{item.id}}" bindtap="copyReport" hover-class="copy-line-hover">
+          <text class="copy-line-icon">⧉</text>
+          <text>一键复制举报信息（订单号 + 双方账号/学号/手机号）</text>
+        </view>
+
+        <view class="card-foot" wx:if="{{item.status === 1}}">
+          <button
+            class="btn btn-plain"
+            size="mini"
+            wx:if="{{item.canBanTaker}}"
+            data-userid="{{item.takerUserId}}"
+            data-useridtext="{{item.takerUserIdText}}"
+            data-nickname="{{item.takerNickname}}"
+            data-studentid="{{item.takerStudentId}}"
+            data-mode="ban"
+            bindtap="openBanModal"
+          >封禁接单人</button>
+          <button class="btn btn-primary" size="mini" data-id="{{item.id}}" bindtap="handleReport">处理举报</button>
+        </view>
+      </view>
+
+      <view class="empty" wx:if="{{!reports.length && !loading}}">暂无举报记录</view>
+    </view>
+  </block>
+  <!-- ==================== 订单管理 ==================== -->
+  <block wx:if="{{tab === 'order'}}">
+    <view class="search-bar">
+      <input
+        class="search-input"
+        value="{{orderKeyword}}"
+        placeholder="搜索订单号 / 任务ID / 学号 / 手机号 / 账号ID"
+        confirm-type="search"
+        bindinput="onOrderKeywordInput"
+        bindconfirm="searchOrders"
+      />
+      <view class="search-btn" bindtap="searchOrders">搜索</view>
+    </view>
+
+    <view class="order-tip">订单号为「GCPT+数字」，支持片段搜索；也可用任务ID / 学号 / 手机号 / 账号ID 定位。不填关键词则展示全部订单（含已被删除的订单）。</view>
+
+    <view class="list">
+      <!-- 批量删除条：勾选后可一键清理历史记录（进行中的记录由后端自动跳过） -->
+      <view class="batch-bar">
+        <view class="batch-all" bindtap="batchSelectAll" data-module="order">
+          <view class="batch-box {{batch.order.all ? 'batch-box-on' : ''}}"></view>
+          <text class="batch-all-txt">{{selectAllText}}</text>
+        </view>
+        <text class="batch-count">{{batch.order.text}}</text>
+        <view class="batch-del" bindtap="batchDelete" data-module="order">{{batchDeleteText}}</view>
+      </view>
+      <view class="card" wx:for="{{orders}}" wx:key="taskId">
+        <view class="batch-box batch-box-card {{item._sel ? 'batch-box-on' : ''}}"
+              data-module="order" data-id="{{item.taskId}}" catchtap="batchToggle"></view>
+        <view class="card-head">
+          <text class="card-title">{{item.orderNo || '任务 #' + item.taskId}}</text>
+          <text class="{{item.statusClass}}">{{item.statusText}}</text>
+        </view>
+
+        <view class="row"><text class="label">订单号</text><text class="value value-primary">{{item.orderNo || '暂无'}}</text></view>
+        <view class="row"><text class="label">任务ID</text><text class="value">#{{item.taskId}}</text></view>
+        <view class="row">
+          <text class="label">限时</text>
+          <text class="value" wx:if="{{item.countdownText && !item.isOvertime}}">剩余 {{item.countdownText}}</text>
+          <text class="value value-danger" wx:elif="{{item.isOvertime}}">已超时 {{item.countdownText}}</text>
+          <text class="value" wx:else>{{item.timeLimitText}}</text>
+        </view>
+        <view class="row" wx:if="{{item.isDeleted}}">
+          <text class="label">订单状态</text>
+          <text class="value value-danger">已被管理员删除（{{item.deleteTimeText}}）</text>
+        </view>
+
+        <view class="mini-title">相关人员 · 点击卡片查看该用户全部资料</view>
+        <view class="person-cards">
+          <user-card person="{{item.ownerPerson}}" clickable bind:usertap="onUserCardTap" />
+          <user-card wx:if="{{item.takerPerson}}" person="{{item.takerPerson}}" clickable bind:usertap="onUserCardTap" />
+        </view>
+        <view class="row"><text class="label">雇主手机</text><text class="value">{{item.owner.phone || '未填'}}</text></view>
+        <view class="row" wx:if="{{item.taker}}"><text class="label">接单人手机</text><text class="value">{{item.taker.phone || '未填'}}</text></view>
+
+        <view class="row"><text class="label">收件人</text><text class="value">{{item.receiverName}} {{item.receiverPhone}}</text></view>
+        <view class="row" wx:if="{{item.pickupCode}}"><text class="label">取件码</text><text class="value">{{item.pickupCode}}</text></view>
+        <view class="row"><text class="label">送达地址</text><text class="value">{{item.deliverAddress}}</text></view>
+        <view class="row" wx:if="{{item.detailAddress}}"><text class="label">详细地址</text><text class="value">{{item.detailAddress}}</text></view>
+        <view class="row"><text class="label">跑腿酬金</text><text class="value value-primary">{{item.rewardText}} 元</text></view>
+        <view class="row">
+          <text class="label">信息服务费</text>
+          <text class="value" wx:if="{{item.isFreeDelivery}}">免费代拿权益（免服务费）</text>
+          <text class="value" wx:else>{{item.serviceFeeText}} 元</text>
+        </view>
+        <view class="row"><text class="label">支付状态</text><text class="value">{{item.payStatusText || '暂无流水'}}</text></view>
+        <view class="row"><text class="label">发布时间</text><text class="value">{{item.publishTimeText}}</text></view>
+        <view class="row" wx:if="{{item.takeTime}}"><text class="label">接单时间</text><text class="value">{{item.takeTimeText}}</text></view>
+        <view class="row" wx:if="{{item.submitFinishTime}}"><text class="label">送达时间</text><text class="value">{{item.submitFinishTimeText}}</text></view>
+        <view class="row" wx:if="{{item.isRefunded}}"><text class="label">退费状态</text><text class="value value-success">已返还 1 张发布券</text></view>
+        <view class="row" wx:if="{{item.isLateDelivery}}"><text class="label">超时送达</text><text class="value value-danger">已扣减酬金 {{item.lateDeduct}} 元</text></view>
+
+        <view class="block-text" wx:if="{{item.remark}}">
+          <text class="label">任务备注</text>
+          <text class="content">{{item.remark}}</text>
+        </view>
+        <view class="block-text" wx:if="{{item.isDisputed}}">
+          <text class="label">未送达申诉</text>
+          <text class="content content-reply">{{item.disputeReason}}</text>
+        </view>
+        <view class="block-text" wx:if="{{item.isDeleted && item.deleteReason}}">
+          <text class="label">删除原因</text>
+          <text class="content content-reply">{{item.deleteReason}}</text>
+        </view>
+
+        <view class="thumb-row" wx:if="{{item.imageUrls.length}}">
+          <image
+            wx:for="{{item.imageUrls}}"
+            wx:for-item="img"
+            wx:key="*this"
+            class="thumb-img"
+            src="{{img}}"
+            mode="aspectFill"
+            data-url="{{img}}"
+            bindtap="previewOrderImage"
+          />
+        </view>
+        <view class="thumb-row" wx:if="{{item.deliveryImageUrls.length}}">
+          <image
+            wx:for="{{item.deliveryImageUrls}}"
+            wx:for-item="img"
+            wx:key="*this"
+            class="thumb-img"
+            src="{{img}}"
+            mode="aspectFill"
+            data-url="{{img}}"
+            bindtap="previewOrderImage"
+          />
+        </view>
+
+        <!-- 操作区：等宽紧凑操作格（原来是 5 个原生 button，尺寸大且换行参差，视觉很乱） -->
+        <view class="order-ops">
+          <view class="op op-plain" data-id="{{item.taskId}}" bindtap="viewOrderDetail" hover-class="op-hover">
+            <view class="ico ico-search op-ico"></view>
+            <text class="op-txt">查看详情</text>
+          </view>
+          <view
+            class="op op-danger"
+            wx:if="{{item.canPunishOwner}}"
+            data-userid="{{item.owner.userId}}"
+            data-useridtext="{{item.owner.userIdText}}"
+            data-nickname="{{item.owner.nickname}}"
+            data-studentid="{{item.owner.studentId}}"
+            data-mode="ban"
+            bindtap="openBanModal"
+            hover-class="op-hover"
+          >
+            <view class="ico ico-ban op-ico"></view>
+            <text class="op-txt">处罚雇主</text>
+          </view>
+          <view
+            class="op op-danger"
+            wx:if="{{item.canPunishTaker}}"
+            data-userid="{{item.taker.userId}}"
+            data-useridtext="{{item.taker.userIdText}}"
+            data-nickname="{{item.taker.nickname}}"
+            data-studentid="{{item.taker.studentId}}"
+            data-mode="ban"
+            bindtap="openBanModal"
+            hover-class="op-hover"
+          >
+            <view class="ico ico-ban op-ico"></view>
+            <text class="op-txt">处罚接单人</text>
+          </view>
+          <view class="op op-primary" wx:if="{{item.canEdit}}" data-id="{{item.taskId}}" bindtap="openOrderEdit" hover-class="op-hover">
+            <view class="ico ico-edit op-ico"></view>
+            <text class="op-txt">编辑订单</text>
+          </view>
+          <view class="op op-danger" wx:if="{{item.canDelete}}" data-id="{{item.taskId}}" bindtap="deleteOrder" hover-class="op-hover">
+            <view class="ico ico-trash op-ico"></view>
+            <text class="op-txt">删除订单</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="empty" wx:if="{{!orders.length && !loading}}">
+        {{orderKeyword ? '没有搜到匹配的订单，请核对订单号 / 任务ID / 学号 / 手机号' : '暂无订单'}}
+      </view>
+    </view>
+  </block>
+
+  <!-- ==================== 封禁管理 ==================== -->
+  <block wx:if="{{tab === 'ban'}}">
+    <view class="search-bar">
+      <input
+        class="search-input"
+        value="{{banKeyword}}"
+        placeholder="搜索学号 / 手机号 / 账号ID / 昵称 / 姓名"
+        confirm-type="search"
+        bindinput="onBanKeywordInput"
+        bindconfirm="loadBans"
+      />
+      <view class="search-btn" bindtap="loadBans">搜索</view>
+    </view>
+
+    <view class="ban-tip">
+      不输入关键词时，下方是「当前封禁名单」（一行一排）。搜索框既会搜到已封禁用户，
+      也会搜到未封禁用户：未封禁的点「封禁接单」直接封禁；已封禁的点「加时」在原解禁时间上继续累加，点「解封」立即恢复其接单权限。
+    </view>
+
+    <view class="list">
+      <!-- 批量删除条：勾选后可一键清理历史记录（进行中的记录由后端自动跳过） -->
+      <view class="batch-bar">
+        <view class="batch-all" bindtap="batchSelectAll" data-module="ban">
+          <view class="batch-box {{batch.ban.all ? 'batch-box-on' : ''}}"></view>
+          <text class="batch-all-txt">{{selectAllText}}</text>
+        </view>
+        <text class="batch-count">{{batch.ban.text}}</text>
+        <view class="batch-del" bindtap="batchDelete" data-module="ban">{{batchDeleteText}}</view>
+      </view>
+      <view class="card" wx:for="{{bans}}" wx:key="userId">
+        <view class="batch-box batch-box-card {{item._sel ? 'batch-box-on' : ''}}"
+              data-module="ban" data-id="{{item.userId}}" catchtap="batchToggle"></view>
+        <view class="card-head">
+          <text class="card-title">账号 {{item.userIdText}}</text>
+          <!-- 封禁中：红色标签展示剩余时长；未封禁：灰色标签展示字典文案「未封禁」 -->
+          <text class="tag tag-danger" wx:if="{{item.isBanned}}">剩余 {{item.remainText}}</text>
+          <text class="tag" wx:else>{{item.banStatusText}}</text>
+        </view>
+        <view class="row"><text class="label">昵称</text><text class="value">{{item.nickname}}</text></view>
+        <view class="row"><text class="label">姓名</text><text class="value">{{item.name || '未填'}}</text></view>
+        <view class="row"><text class="label">学号</text><text class="value">{{item.studentId}}</text></view>
+        <view class="row"><text class="label">手机号</text><text class="value">{{item.phone}}</text></view>
+        <view class="row" wx:if="{{item.isBanned}}"><text class="label">封禁原因</text><text class="value">{{item.banReason || '未填写'}}</text></view>
+        <view class="row" wx:if="{{item.isBanned}}"><text class="label">封禁时间</text><text class="value">{{item.createdAtText}}</text></view>
+        <view class="row" wx:if="{{item.isBanned}}"><text class="label">解禁时间</text><text class="value value-danger">{{item.endTimeText}}</text></view>
+
+        <view class="card-foot">
+          <!-- 已封禁：可立即解封，也可在原解禁时间上继续加时 -->
+          <block wx:if="{{item.isBanned}}">
+            <button class="btn btn-plain" size="mini" data-userid="{{item.userId}}" data-useridtext="{{item.userIdText}}" data-nickname="{{item.nickname}}" bindtap="unban">解封</button>
+            <button
+              class="btn btn-primary"
+              size="mini"
+              data-userid="{{item.userId}}"
+              data-useridtext="{{item.userIdText}}"
+              data-nickname="{{item.nickname}}"
+              data-studentid="{{item.studentId}}"
+              data-mode="extend"
+              bindtap="openBanModal"
+            >加时</button>
+          </block>
+          <!-- 未封禁（搜索命中的普通用户）：直接对其封禁接单权限 -->
+          <button
+            wx:else
+            class="btn btn-danger"
+            size="mini"
+            data-userid="{{item.userId}}"
+            data-useridtext="{{item.userIdText}}"
+            data-nickname="{{item.nickname}}"
+            data-studentid="{{item.studentId}}"
+            data-mode="ban"
+            bindtap="openBanModal"
+          >封禁接单</button>
+        </view>
+      </view>
+
+      <view class="empty" wx:if="{{!bans.length && !loading}}">
+        {{banKeyword ? '没有搜到匹配的用户' : '当前没有被封禁的用户'}}
+      </view>
+    </view>
+  </block>
+
+  <!-- ==================== 用户管理 ==================== -->
+  <block wx:if="{{tab === 'user'}}">
+    <view class="search-bar">
+      <input
+        class="search-input"
+        value="{{keyword}}"
+        placeholder="搜索手机号 / 昵称 / 学号 / 姓名"
+        confirm-type="search"
+        bindinput="onKeywordInput"
+        bindconfirm="loadUsers"
+      />
+      <view class="search-btn" bindtap="loadUsers">搜索</view>
+    </view>
+
+    <!-- 已注销账号默认隐藏（否则列表会被「已注销用户」占满）；需要追溯时打开这个开关 -->
+    <view class="switcher" bindtap="toggleDeactivated">
+      <view class="batch-box {{includeDeactivated ? 'batch-box-on' : ''}}"></view>
+      <text class="switcher-txt">{{showDeactivatedText}}</text>
+    </view>
+
+    <view class="list">
+      <!-- 批量删除条：勾选后可一键清理历史记录（进行中的记录由后端自动跳过） -->
+      <view class="batch-bar">
+        <view class="batch-all" bindtap="batchSelectAll" data-module="user">
+          <view class="batch-box {{batch.user.all ? 'batch-box-on' : ''}}"></view>
+          <text class="batch-all-txt">{{selectAllText}}</text>
+        </view>
+        <text class="batch-count">{{batch.user.text}}</text>
+        <view class="batch-del" bindtap="batchDelete" data-module="user">{{batchDeleteText}}</view>
+      </view>
+      <view class="card" wx:for="{{users}}" wx:key="userId">
+        <view class="batch-box batch-box-card {{item._sel ? 'batch-box-on' : ''}}"
+              data-module="user" data-id="{{item.userId}}" catchtap="batchToggle"></view>
+        <view class="card-head">
+          <!-- 点头像看大图：排查头像审核 / 盗图举报时不用再额外写预览弹层 -->
+          <image class="user-avatar" wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill"
+                 catchtap="previewImage" data-url="{{item.avatarUrl}}" />
+          <view class="user-avatar user-avatar-empty" wx:else>无</view>
+          <text class="card-title">账号 {{item.userIdText}}</text>
+          <text class="tag tag-admin" wx:if="{{item.isAdmin}}">{{item.roleTag}}</text>
+        </view>
+        <view class="row"><text class="label">账号身份</text><text class="value">{{item.roleTag}}</text></view>
+        <view class="row"><text class="label">昵称</text><text class="value">{{item.nickname}}</text></view>
+        <view class="row"><text class="label">姓名</text><text class="value">{{item.name}}</text></view>
+        <!-- 管理员后台展示完整手机号，便于核对身份、联系当事人 -->
+        <view class="row"><text class="label">手机号</text><text class="value">{{item.phone}}</text></view>
+        <view class="row"><text class="label">学号</text><text class="value">{{item.studentId}}</text></view>
+        <view class="row">
+          <text class="label">校园认证</text>
+          <text class="value {{item.isCampusAudit === 2 ? 'value-success' : 'value-danger'}}">{{item.campusAuditText}}</text>
+        </view>
+        <view class="row"><text class="label">昵称修改次数</text><text class="value">{{item.nicknameModifyText}}</text></view>
+        <view class="row" wx:if="{{item.isBanned}}">
+          <text class="label">接单封禁</text>
+          <text class="value value-danger">剩余 {{item.banRemainText}}（至 {{item.banTakeTime}}）</text>
+        </view>
+        <view class="row"><text class="label">邀请码</text><text class="value">{{item.inviteCode}}</text></view>
+
+        <!-- 操作区：与订单卡片统一用等宽操作格，避免原生 button 尺寸过大参差不齐 -->
+        <view class="order-ops">
+          <!-- 修改用户资料：昵称 / 姓名 / 手机号 / 学号 / 校园认证状态 / 头像，管理员账号也可修改 -->
+          <view class="op op-primary" data-userid="{{item.userId}}" bindtap="openUserEdit" hover-class="op-hover">
+            <view class="ico ico-edit op-ico"></view>
+            <text class="op-txt">修改资料</text>
+          </view>
+          <!-- 重置登录密码：可自动生成随机密码或手动指定，重置后该用户所有设备强制退出登录 -->
+          <view class="op op-plain" data-userid="{{item.userId}}" bindtap="openPwdModal" hover-class="op-hover">
+            <view class="ico ico-lock op-ico"></view>
+            <text class="op-txt">重置密码</text>
+          </view>
+          <!-- 封禁接单权限：管理员账号不显示该按钮（后端也有硬校验，绝不允许封禁管理员） -->
+          <view
+            wx:if="{{!item.isAdmin}}"
+            class="op op-plain"
+            data-userid="{{item.userId}}"
+            data-useridtext="{{item.userIdText}}"
+            data-nickname="{{item.nickname}}"
+            data-studentid="{{item.studentId}}"
+            data-mode="{{item.isBanned ? 'extend' : 'ban'}}"
+            bindtap="openBanModal"
+            hover-class="op-hover"
+          >
+            <view class="ico ico-ban op-ico"></view>
+            <text class="op-txt">{{item.isBanned ? '加时封禁' : '封禁接单'}}</text>
+          </view>
+          <!-- 注销账号：不可恢复操作，仅普通用户显示（管理员账号与管理员自己都不允许注销，后端有硬校验兜底） -->
+          <view
+            wx:if="{{!item.isAdmin}}"
+            class="op op-danger"
+            data-userid="{{item.userId}}"
+            bindtap="openDeactivateModal"
+            hover-class="op-hover"
+          >
+            <view class="ico ico-minus op-ico"></view>
+            <text class="op-txt">注销账号</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="empty" wx:if="{{!users.length && !loading}}">暂无用户数据</view>
+    </view>
+  </block>
+
+  <!-- ==================== 公告管理（跑马灯 / 全局通知条） ==================== -->
+  <block wx:if="{{tab === 'announce'}}">
+    <view class="announce-form">
+      <view class="form-label">展示位置</view>
+      <view class="scope-picker">
+        <view wx:for="{{announceScopes}}" wx:key="value"
+              class="scope-item {{announceScope === item.value ? 'scope-item-on' : ''}}"
+              data-value="{{item.value}}" bindtap="onAnnounceScopeChange">{{item.label}}</view>
+      </view>
+
+      <view class="form-label">公告内容</view>
+      <textarea class="announce-input"
+                value="{{announceContent}}"
+                maxlength="{{announceMaxLen}}"
+                placeholder="{{announceContentPlaceholder}}"
+                placeholder-class="announce-placeholder"
+                bindinput="onAnnounceInput"
+                auto-height />
+
+      <view class="form-label">生效时间（选填）</view>
+      <view class="announce-times">
+        <input class="announce-time" value="{{announceStart}}"
+               placeholder="{{announceStartPlaceholder}}" placeholder-class="announce-placeholder"
+               bindinput="onAnnounceStartInput" />
+        <input class="announce-time" value="{{announceEnd}}"
+               placeholder="{{announceEndPlaceholder}}" placeholder-class="announce-placeholder"
+               bindinput="onAnnounceEndInput" />
+      </view>
+      <view class="announce-tip">{{announceTimeTip}}</view>
+
+      <view class="switcher" bindtap="toggleAnnouncePush">
+        <view class="batch-box {{announcePush ? 'batch-box-on' : ''}}"></view>
+        <text class="switcher-txt">{{announcePushLabel}}</text>
+      </view>
+
+      <view class="switcher" wx:if="{{announceScope === 2}}" bindtap="toggleAnnounceClosable">
+        <view class="batch-box {{announceClosable ? 'batch-box-on' : ''}}"></view>
+        <text class="switcher-txt">{{announceClosableLabel}}</text>
+      </view>
+
+      <view class="announce-submit" bindtap="submitAnnounce">
+        {{announceSubmitting ? announcePublishingText : announceSubmitText}}
+      </view>
+    </view>
+
+    <view class="list">
+      <!-- 批量删除条：勾选后可一键清理历史公告 -->
+      <view class="batch-bar">
+        <view class="batch-all" bindtap="batchSelectAll" data-module="announce">
+          <view class="batch-box {{batch.announce.all ? 'batch-box-on' : ''}}"></view>
+          <text class="batch-all-txt">{{selectAllText}}</text>
+        </view>
+        <text class="batch-count">{{batch.announce.text}}</text>
+        <view class="batch-del" bindtap="batchDelete" data-module="announce">{{batchDeleteText}}</view>
+      </view>
+
+      <view class="card" wx:for="{{announces}}" wx:key="id">
+        <view class="batch-box batch-box-card {{item._sel ? 'batch-box-on' : ''}}"
+              data-module="announce" data-id="{{item.id}}" catchtap="batchToggle"></view>
+        <view class="card-head">
+          <text class="card-title">{{item.scopeText}}</text>
+          <text class="tag {{item.isActive ? 'tag-success' : ''}}">{{item.isActive ? announceActiveText : announceInactiveText}}</text>
+        </view>
+        <view class="row"><text class="label">内容</text><text class="value">{{item.content}}</text></view>
+        <view class="row"><text class="label">发布时间</text><text class="value">{{item.timeText}}</text></view>
+        <view class="row" wx:if="{{item.pushCount > 0}}">
+          <text class="label">已推送</text><text class="value">{{item.pushCount}} 人</text>
+        </view>
+        <view class="card-foot">
+          <view class="btn btn-plain" data-id="{{item.id}}" data-active="{{item.isActive}}" bindtap="toggleAnnounceActive">
+            {{item.isActive ? announceOffText : announceOnText}}
+          </view>
+          <view class="btn btn-danger" data-id="{{item.id}}" bindtap="deleteAnnounceOne">{{deleteText}}</view>
+        </view>
+      </view>
+
+      <view class="empty" wx:if="{{!announces.length && !loading}}">{{announceEmptyText}}</view>
+    </view>
+  </block>
+
+  <!-- ==================== 封禁 / 加时弹窗 ==================== -->
+  <view class="mask" wx:if="{{showBanModal}}">
+    <view class="modal">
+      <view class="modal-title">{{banMode === 'extend' ? '封禁加时' : '封禁接单权限'}}</view>
+      <view class="modal-body">
+        <view class="sub" wx:if="{{banTarget}}">
+          目标用户：{{banTarget.userIdText}} {{banTarget.nickname}}（学号 {{banTarget.studentId}}）
+        </view>
+
+        <view class="sub" style="margin-top:12rpx">封禁时长：</view>
+        <view class="tag-picker">
+          <view
+            wx:for="{{durationOptions}}"
+            wx:key="key"
+            class="tag-chip {{banDurationType === item.key ? 'tag-chip-active' : ''}}"
+            data-key="{{item.key}}"
+            bindtap="onDurationSelect"
+          >{{item.label}}</view>
+        </view>
+
+        <!-- 自定义时长：年 / 月 / 日 / 时 / 分 / 秒，最小为 0，不填（留空）表示该项为 0 -->
+        <block wx:if="{{banDurationType === 'custom'}}">
+          <view class="custom-grid">
+            <view class="custom-item" wx:for="{{customUnits}}" wx:key="key">
+              <input
+                class="custom-input"
+                type="number"
+                value="{{banCustom[item.key]}}"
+                placeholder="0"
+                placeholder-class="placeholder"
+                data-unit="{{item.key}}"
+                bindinput="onCustomInput"
+              />
+              <text class="custom-unit">{{item.label}}</text>
+            </view>
+          </view>
+          <view class="sub">每一项最小为 0，不填即表示该项为 0（例如只填「30 分」就是封禁 30 分钟）。</view>
+        </block>
+
+        <input
+          class="modal-input"
+          placeholder="封禁原因（可选）"
+          placeholder-class="placeholder"
+          value="{{banReason}}"
+          bindinput="onBanReasonInput"
+        />
+        <view class="sub" style="margin-top:12rpx">
+          封禁期间该用户无法接单；若其当前已在封禁中，则在原解禁时间上继续累加（即加时）。
+        </view>
+      </view>
+      <view class="modal-foot">
+        <view class="modal-btn modal-btn-cancel" bindtap="closeBanModal">取消</view>
+        <view class="modal-btn modal-btn-ok" bindtap="submitBan">确定</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- ==================== 修改用户资料弹窗（管理员最高权限：昵称/姓名/手机号/学号/校园认证状态/头像） ==================== -->
+  <view class="mask" wx:if="{{showUserEdit && editForm}}">
+    <view class="modal">
+      <view class="modal-title">修改用户资料</view>
+      <view class="modal-body">
+        <view class="sub">
+          目标用户：{{editForm.userIdText}}（{{editForm.isAdmin ? '管理员账号' : '普通用户'}}）
+        </view>
+
+        <!-- 头像：管理员上传后直接生效，无需再走审核流程 -->
+        <view class="edit-avatar-row">
+          <image
+            class="edit-avatar"
+            wx:if="{{editForm.avatarUrl}}"
+            src="{{editForm.avatarUrl}}"
+            mode="aspectFill"
+            bindtap="previewEditAvatar"
+          />
+          <view class="edit-avatar edit-avatar-empty" wx:else>无</view>
+          <view class="edit-avatar-btns">
+            <button class="btn btn-primary" size="mini" bindtap="chooseEditAvatar">上传头像</button>
+            <button class="btn btn-plain" size="mini" wx:if="{{editForm.avatar}}" bindtap="removeEditAvatar">清空头像</button>
+          </view>
+        </view>
+
+        <view class="edit-field">
+          <text class="edit-label">昵称</text>
+          <input class="edit-input" value="{{editForm.nickname}}" data-field="nickname" bindinput="onEditInput"
+                 placeholder="1-30字" placeholder-class="placeholder" />
+        </view>
+        <view class="edit-field">
+          <text class="edit-label">姓名</text>
+          <input class="edit-input" value="{{editForm.name}}" data-field="name" bindinput="onEditInput"
+                 placeholder="真实姓名，1-20字" placeholder-class="placeholder" />
+        </view>
+        <view class="edit-field">
+          <text class="edit-label">手机号</text>
+          <input class="edit-input" type="number" maxlength="11" value="{{editForm.phone}}" data-field="phone"
+                 bindinput="onEditInput" placeholder="11位手机号" placeholder-class="placeholder" />
+        </view>
+        <view class="edit-field">
+          <text class="edit-label">学号</text>
+          <input class="edit-input" value="{{editForm.studentId}}" data-field="studentId" bindinput="onEditInput"
+                 placeholder="4-20位字母或数字" placeholder-class="placeholder" />
+        </view>
+
+        <view class="sub" style="margin-top:16rpx">校园认证状态：</view>
+        <view class="tag-picker">
+          <view
+            wx:for="{{campusAuditOptions}}"
+            wx:key="value"
+            class="tag-chip {{editForm.isCampusAudit === item.value ? 'tag-chip-active' : ''}}"
+            data-value="{{item.value}}"
+            bindtap="onEditCampusSelect"
+          >{{item.label}}</view>
+        </view>
+
+        <view class="sub" style="margin-top:16rpx">
+          保存后系统会自动向该用户的消息中心推送「账号信息已被管理员修改」的提示。
+          管理员账号的学号与权限白名单绑定，不可修改。
+        </view>
+      </view>
+      <view class="modal-foot">
+        <view class="modal-btn modal-btn-cancel" bindtap="closeUserEdit">取消</view>
+        <view
+          class="modal-btn {{editSubmitting ? 'modal-btn-disabled' : 'modal-btn-ok'}}"
+          bindtap="submitUserEdit"
+        >{{editSubmitting ? '保存中...' : '保存'}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- ==================== 重置登录密码弹窗 ==================== -->
+  <view class="mask" wx:if="{{showPwdModal && pwdForm}}">
+    <view class="modal">
+      <view class="modal-title">重置登录密码</view>
+      <view class="modal-body">
+        <view class="sub">目标用户：{{pwdForm.userIdText}} {{pwdForm.nickname}}</view>
+
+        <view class="sub" style="margin-top:16rpx">密码设置方式：</view>
+        <view class="tag-picker">
+          <view
+            class="tag-chip {{pwdForm.mode === 'auto' ? 'tag-chip-active' : ''}}"
+            data-mode="auto"
+            bindtap="onPwdModeSelect"
+          >自动生成随机密码</view>
+          <view
+            class="tag-chip {{pwdForm.mode === 'manual' ? 'tag-chip-active' : ''}}"
+            data-mode="manual"
+            bindtap="onPwdModeSelect"
+          >手动指定新密码</view>
+        </view>
+
+        <view class="edit-field" wx:if="{{pwdForm.mode === 'manual'}}">
+          <text class="edit-label">新密码</text>
+          <input class="edit-input" value="{{pwdForm.password}}" data-field="password" bindinput="onPwdInput"
+                 placeholder="6-20位" placeholder-class="placeholder" />
+        </view>
+        <view class="sub" wx:else style="margin-top:12rpx">
+          系统会生成一个 8 位随机密码（已剔除 0/O、1/l 等易混字符），重置后可直接复制转告该用户。
+        </view>
+
+        <view class="pwd-tip">
+          重置成功后：① 该用户密码立即变为新密码；② 密码错误次数清零、登录锁定解除；
+          ③ 该用户所有设备立即退出登录，需用新密码重新登录；④ 系统会推送站内消息告知本人。
+        </view>
+      </view>
+      <view class="modal-foot">
+        <view class="modal-btn modal-btn-cancel" bindtap="closePwdModal">取消</view>
+        <view
+          class="modal-btn {{pwdSubmitting ? 'modal-btn-disabled' : 'modal-btn-ok'}}"
+          bindtap="submitResetPwd"
+        >{{pwdSubmitting ? '重置中...' : '确认重置'}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- ==================== 注销账号弹窗（不可恢复） ==================== -->
+  <view class="mask" wx:if="{{showDeactivateModal && deactivateTarget}}">
+    <view class="modal">
+      <view class="modal-title">注销账号</view>
+      <view class="modal-body">
+        <view class="sub">
+          目标用户：{{deactivateTarget.userIdText}} {{deactivateTarget.nickname}}（学号 {{deactivateTarget.studentId}}）
+        </view>
+        <view class="deactivate-warn">注销后该账号不可恢复，请确认以下影响：</view>
+        <view class="deactivate-list">
+          <view>· 手机号与学号将被释放，可被其他人重新注册使用；</view>
+          <view>· 头像 / 昵称 / 认证信息等个人资料将被清空；</view>
+          <view>· 该用户当前所有设备立即退出登录，且无法再登录本账号；</view>
+          <view>· 历史任务与账单记录仍会保留，供交易双方查看。</view>
+        </view>
+      </view>
+      <view class="modal-foot">
+        <view class="modal-btn modal-btn-cancel" bindtap="closeDeactivateModal">取消</view>
+        <view
+          class="modal-btn {{deactivateSubmitting ? 'modal-btn-disabled' : 'modal-btn-ok deactivate-ok'}}"
+          bindtap="submitDeactivate"
+        >{{deactivateSubmitting ? '注销中...' : '确认注销'}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- ==================== 订单编辑弹窗（管理员直接修正订单资料与酬金） ==================== -->
+  <view class="mask" wx:if="{{showOrderEdit && orderForm}}">
+    <view class="modal">
+      <view class="modal-title">编辑订单</view>
+      <view class="modal-body order-edit-body">
+        <view class="sub">订单号：{{orderForm.orderNo || orderForm.taskId}}</view>
+
+        <view class="edit-field">
+          <text class="edit-label">收件人姓名</text>
+          <input class="edit-input" value="{{orderForm.receiverName}}" data-field="receiverName" bindinput="onOrderInput" placeholder="必填，不超过20字" placeholder-class="placeholder" />
+        </view>
+        <view class="edit-field">
+          <text class="edit-label">收件人手机号</text>
+          <input class="edit-input" type="number" maxlength="11" value="{{orderForm.receiverPhone}}" data-field="receiverPhone" bindinput="onOrderInput" placeholder="必填，11位手机号" placeholder-class="placeholder" />
+        </view>
+        <view class="edit-field">
+          <text class="edit-label">取件码</text>
+          <input class="edit-input" value="{{orderForm.pickupCode}}" data-field="pickupCode" bindinput="onOrderInput" placeholder="选填" placeholder-class="placeholder" />
+        </view>
+        <view class="edit-field">
+          <text class="edit-label">送达地址</text>
+          <input class="edit-input" value="{{orderForm.deliverAddress}}" data-field="deliverAddress" bindinput="onOrderInput" placeholder="必填，不超过100字" placeholder-class="placeholder" />
+        </view>
+        <view class="edit-field">
+          <text class="edit-label">详细地址</text>
+          <input class="edit-input" value="{{orderForm.detailAddress}}" data-field="detailAddress" bindinput="onOrderInput" placeholder="选填，门牌 / 房间号" placeholder-class="placeholder" />
+        </view>
+        <view class="edit-field">
+          <text class="edit-label">限时（分钟）</text>
+          <input class="edit-input" type="number" value="{{orderForm.timeLimitMin}}" data-field="timeLimitMin" bindinput="onOrderInput" placeholder="留空表示不限时" placeholder-class="placeholder" />
+          <text class="order-edit-tip">留空表示不限时；填写需为 1-1440 的整数。</text>
+        </view>
+        <view class="edit-field">
+          <text class="edit-label">跑腿酬金（元）</text>
+          <input class="edit-input" type="digit" value="{{orderForm.reward}}" data-field="reward" bindinput="onOrderInput" placeholder="0.5 - 999.99" placeholder-class="placeholder" />
+          <text class="order-edit-tip">管理员修正酬金不受「仅可提高」「3分钟编辑间隔」限制；已完成订单会同步更正账单金额。</text>
+        </view>
+        <view class="edit-field">
+          <text class="edit-label">任务备注</text>
+          <input class="edit-input" value="{{orderForm.remark}}" data-field="remark" bindinput="onOrderInput" placeholder="选填，不超过200字" placeholder-class="placeholder" />
+        </view>
+
+        <view class="sub" style="margin-top:16rpx">任务图片（最多 {{taskImgMax}} 张，单张不超过 2MB，仅支持 jpg / png / webp）</view>
+        <view class="thumb-row">
+          <view class="thumb-wrap" wx:for="{{orderForm.imageUrls}}" wx:key="*this">
+            <image class="thumb-img" src="{{item}}" mode="aspectFill" data-url="{{item}}" bindtap="previewOrderImage" />
+            <view class="thumb-del" data-index="{{index}}" bindtap="removeOrderImage">×</view>
+          </view>
+          <view class="thumb-add" wx:if="{{orderForm.imageUrls.length < taskImgMax}}" bindtap="chooseOrderImage">+</view>
+        </view>
+
+        <view class="modal-tip">
+          保存后系统会自动向雇主（酬金变动时还包括接单人）推送「订单信息已被管理员修改」的站内消息。
+          若要下架订单请使用「删除订单」，删除后不可恢复。
+        </view>
+      </view>
+      <view class="modal-foot">
+        <view class="modal-btn modal-btn-cancel" bindtap="closeOrderEdit">取消</view>
+        <view
+          class="modal-btn {{orderSubmitting ? 'modal-btn-disabled' : 'modal-btn-ok'}}"
+          bindtap="submitOrderEdit"
+        >{{orderSubmitting ? '保存中...' : '保存'}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="loading-tip" wx:if="{{loading}}">加载中...</view>
+  <page-footer />
+</view>

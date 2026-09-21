@@ -1,0 +1,5 @@
+/**
+ * 我的任务（我接的单）- 页面样式
+ * 通用列表样式（状态标签 / 分组标题 / 辅助行）见 styles/list.wxss
+ */
+@import "../../styles/list.wxss";

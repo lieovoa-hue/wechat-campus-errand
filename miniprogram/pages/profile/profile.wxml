@@ -1,0 +1,177 @@
+<view class="container {{themeClass}} theme-root">
+  <!-- 全局通知条：管理员发布的公告，可关闭（本次会话内不再出现） -->
+  <notice-bar />
+  <!-- 统一确认弹窗（自绘，深色自适应）：由 utils/dialog.js 通过 selectComponent 调用 -->
+  <confirm-dialog id="confirmDialog" />
+  <!-- 未登录 -->
+  <view class="card" wx:if="{{!isLogin}}">
+    <view class="title">您还未登录</view>
+    <view class="sub tips">登录后可发布任务、接单赚酬金、查看账单与消息</view>
+    <button class="btn btn-primary submit" bindtap="goLogin">登录 / 注册</button>
+  </view>
+
+  <!-- 已登录 -->
+  <block wx:if="{{isLogin}}">
+    <!-- 个人资料 -->
+    <view class="card profile-card">
+      <view class="row">
+        <!-- 点头像看大图：核对头像审核结果 / 换了新头像想看清细节时很实用 -->
+        <image wx:if="{{avatarUrl}}" class="avatar" src="{{avatarUrl}}" mode="aspectFill"
+               bindtap="previewAvatar" data-url="{{avatarUrl}}" />
+        <view wx:else class="avatar avatar-placeholder">跑</view>
+        <view class="flex-1 info">
+          <view class="nickname">
+            <text class="nickname-name">{{user.nickname}}</text>
+            <!-- 管理员标识：本人与其他用户都能看到 -->
+            <text class="tag tag-admin" wx:if="{{user.isAdmin}}">{{user.roleTag}}</text>
+          </view>
+          <view class="sub">手机号：{{user.phone}}</view>
+        </view>
+      </view>
+
+      <!-- 账号ID 醒目展示：点击整块即可一键复制（换设备登录时直接粘贴，不用手抄） -->
+      <view
+        class="userid-box"
+        hover-class="userid-box-hover"
+        hover-stay-time="80"
+        data-value="{{user.userIdText}}"
+        data-label="账号ID"
+        bindtap="copyValue"
+      >
+        <view class="userid-label">账号 ID</view>
+        <view class="userid-value">{{user.userIdText}}</view>
+        <view class="userid-tip">可用于登录 · 点击复制</view>
+      </view>
+
+      <!-- 分组小标题：把「账号 ID」与下方明细行在视觉上明确分成两块，避免整卡糊成一片 -->
+      <view class="info-title">账号资料</view>
+      <view class="info-row">
+        <text class="info-label">校园认证</text>
+        <!-- 注意：<text> 的内容必须与标签写在同一行。微信会把 <text> 内真实的换行符渲染成换行，
+             若把内容另起一行，标签背景框会凭空多出一个空行高度（框显得「大了一圈」）。 -->
+        <text class="{{campusAuditTagClass}}">{{campusAuditText}}</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">账号身份</text>
+        <text class="{{user.isAdmin ? 'tag tag-admin' : 'tag tag-gray'}}">{{user.roleTag}}</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">学号</text>
+        <text class="info-value">{{user.studentId}}</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">头像审核</text>
+        <text class="{{avatarAuditTagClass}}">{{avatarAuditText}}</text>
+      </view>
+      <view class="info-row" wx:if="{{banTakeText}}">
+        <text class="info-label">禁止接单</text>
+        <text class="info-value danger">解禁时间 {{banTakeText}}</text>
+      </view>
+      <!-- 邀请码：点击可一键复制，分享给同学注册时直接粘贴 -->
+      <view class="info-row" data-value="{{user.inviteCode}}" data-label="邀请码" bindtap="copyValue">
+        <text class="info-label">邀请码</text>
+        <view class="info-value-row">
+          <text class="info-value">{{user.inviteCode}}</text>
+          <text class="copy-chip">复制</text>
+        </view>
+      </view>
+      <view class="info-row">
+        <text class="info-label">密保问题</text>
+        <text class="{{user.securitySet === 1 ? 'tag tag-success' : 'tag tag-warn'}}">{{securityText}}</text>
+      </view>
+    </view>
+
+    <!--
+      功能入口：按「账号安全 / 我的记录 / 管理」分三组，组内一行一条 + 细分割线，
+      比原来「一行一个卡片」的松散排布更紧凑，一屏能看全。
+    -->
+    <view class="card group-card">
+      <view class="entry" hover-class="entry-press" hover-stay-time="60" data-url="/pages/campusCert/campusCert" bindtap="goPage">
+        <view class="entry-name">校园认证</view>
+        <view class="arrow" wx:if="{{user.isAdmin}}">管理员自动认证 ›</view>
+        <view class="arrow" wx:elif="{{user.isCampusAudit !== 2}}">去认证 ›</view>
+        <view class="arrow" wx:else>已认证 ›</view>
+      </view>
+      <view class="entry" hover-class="entry-press" hover-stay-time="60" data-url="/pages/auditApply/auditApply" bindtap="goPage">
+        <view class="entry-name">头像 / 昵称修改</view>
+        <view class="arrow">›</view>
+      </view>
+      <view class="entry" hover-class="entry-press" hover-stay-time="60" data-url="/pages/securitySetup/securitySetup" bindtap="goPage">
+        <view class="entry-name">密保问题</view>
+        <view class="arrow">{{user.securitySet === 1 ? '已设置 · 点击修改 ›' : '未设置 · 点击设置 ›'}}</view>
+      </view>
+      <view class="entry" hover-class="entry-press" hover-stay-time="60" data-url="/pages/devices/devices" bindtap="goPage">
+        <view class="entry-name">我的设备</view>
+        <view class="arrow">换设备登录需密保验证 ›</view>
+      </view>
+      <!-- 忘记密码：直接进入忘记密码页（凭密保问题重置），不再绕一圈先跳登录页 -->
+      <view class="entry" hover-class="entry-press" hover-stay-time="60" data-url="/pages/forgot/forgot" bindtap="goPage">
+        <view class="entry-name">忘记密码</view>
+        <view class="arrow">凭密保问题重置密码 ›</view>
+      </view>
+    </view>
+
+    <view class="card group-card">
+      <view class="entry" hover-class="entry-press" hover-stay-time="60" data-url="/pages/bill/bill" bindtap="goPage">
+        <view class="entry-name">收支账单</view>
+        <view class="arrow">纯记账展示 ›</view>
+      </view>
+      <view class="entry" hover-class="entry-press" hover-stay-time="60" data-url="/pages/message/message" bindtap="goPage">
+        <view class="entry-name">消息中心</view>
+        <view class="entry-tail">
+          <!-- 未读数角标：超过 99 显示 99+，无未读时不渲染 -->
+          <view class="entry-badge" wx:if="{{unread > 0}}">{{unreadText}}</view>
+          <view class="arrow">›</view>
+        </view>
+      </view>
+      <view class="entry" hover-class="entry-press" hover-stay-time="60" data-url="/pages/appeal/appeal" bindtap="goPage">
+        <view class="entry-name">申诉中心</view>
+        <view class="arrow">›</view>
+      </view>
+    </view>
+
+    <view class="card group-card" wx:if="{{user.isAdmin}}">
+      <view class="entry" hover-class="entry-press" hover-stay-time="60" data-url="/pages/admin/admin" bindtap="goPage">
+        <view class="entry-name">管理员后台</view>
+        <view class="arrow">订单 / 审核 / 申诉 / 举报 / 用户 ›</view>
+      </view>
+    </view>
+
+    <button class="btn btn-plain logout" bindtap="logout">退出登录</button>
+    <!-- 注销账号（不可恢复）：置于「退出登录」下方，点击后弹出二次确认并校验登录密码 -->
+    <button class="btn deactivate-btn" bindtap="openDeactivate">注销账号</button>
+
+    <!-- 注销账号确认弹窗：说明注销影响 + 输入登录密码二次校验 -->
+    <view class="mask" wx:if="{{showDeactivate}}">
+      <view class="modal">
+        <view class="modal-title">注销账号</view>
+        <view class="modal-body">
+          <view class="deactivate-warn">注销后账号不可恢复，请确认以下影响：</view>
+          <view class="deactivate-list">
+            <view>· 手机号与学号将被释放，可被其他人重新注册使用；</view>
+            <view>· 头像 / 昵称 / 认证信息等个人资料将被清空；</view>
+            <view>· 当前所有设备立即退出登录，且无法再登录本账号；</view>
+            <view>· 历史任务与账单记录仍会保留，供交易双方查看。</view>
+          </view>
+          <view class="deactivate-tip">请输入当前账号的登录密码以确认注销：</view>
+          <input
+            class="modal-input"
+            password
+            placeholder="请输入登录密码"
+            value="{{deactivatePassword}}"
+            bindinput="onDeactivateInput"
+          />
+        </view>
+        <view class="modal-foot">
+          <view class="modal-btn modal-btn-cancel" bindtap="closeDeactivate">取消</view>
+          <view
+            class="modal-btn {{deactivateSubmitting ? 'modal-btn-disabled' : 'modal-btn-ok deactivate-ok'}}"
+            bindtap="submitDeactivate"
+          >{{deactivateSubmitting ? '处理中…' : '确认注销'}}</view>
+        </view>
+      </view>
+    </view>
+  </block>
+  <page-footer />
+  <view class="safe-bottom"></view>
+</view>

@@ -1,0 +1,129 @@
+/**
+ * =====================================================================
+ * 列表页共用样式（我的发布 / 我的任务）
+ * ---------------------------------------------------------------------
+ * 统一「顶部状态胶囊 + 状态色条卡片 + 分组标题」的视觉口径，
+ * 两个页面共用一份，改一处即两页同步。
+ * 设计依据：docs/page-design-v1.md 第 09 / 10 页
+ * ===================================================================== */
+
+/* ---------------------------------------------------- 顶部状态胶囊 */
+.tab-scroll {
+  white-space: nowrap;
+  margin-bottom: var(--sp-5);
+}
+
+.tab-item {
+  display: inline-block;
+  height: 60rpx;
+  line-height: 60rpx;
+  padding: 0 var(--sp-6);
+  margin-right: var(--sp-3);
+  background: var(--surface);
+  border: 2rpx solid var(--line);
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+  /* 只过渡颜色与缩放：过渡 all 会把布局属性一并纳入，低端机上容易掉帧 */
+  transition: background-color var(--dur-base) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out),
+    color var(--dur-base) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.tab-item:active {
+  transform: scale(.96);
+}
+
+/* 选中态：实心品牌蓝。不做位移、不投影，避免列表顶部在滑动时抖动 */
+.tab-active {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--brand-on);
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------- 状态分组标题 */
+.group-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: var(--sp-2) 0 var(--sp-3);
+}
+
+.group-title {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+/* ---------------------------------------------------- 状态色条卡片 */
+/* 左侧色条 = 任务状态，滑动列表时不用读文字就能分辨进度 */
+.task-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.task-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: var(--sp-6);
+  bottom: var(--sp-6);
+  width: 8rpx;
+  border-radius: 0 4rpx 4rpx 0;
+  background: var(--brand);
+}
+
+/* 0 待接单 */
+.task-card-s0::before {
+  background: var(--brand);
+}
+
+/* 1 进行中 */
+.task-card-s1::before {
+  background: var(--warn-fill);
+}
+
+/* 2 待雇主确认 */
+.task-card-s2::before {
+  background: var(--accent);
+}
+
+/* 3 已完成 */
+.task-card-s3::before {
+  background: var(--success-fill);
+}
+
+/* 4 超时取消 / 5 雇主撤销：历史态，退成中性灰 */
+.task-card-s4::before,
+.task-card-s5::before {
+  background: var(--gray-3);
+}
+
+/* ---------------------------------------------------- 卡片内文字 */
+/* 送达地址作为卡片主标题：用户第一眼要看的是「送到哪」，而不是任务编号 */
+.task-addr {
+  font-size: var(--fs-title);
+  font-weight: 700;
+  letter-spacing: -.5rpx;
+  color: var(--text-1);
+  max-width: 420rpx;
+}
+
+.line {
+  margin-top: var(--sp-2);
+}
+
+.foot {
+  margin-top: var(--sp-4);
+}
+
+/* 昵称 / 角色后的标识间距 */
+.row .tag {
+  margin-left: var(--sp-3);
+}
+
+.foot .tag {
+  margin-left: var(--sp-3);
+}

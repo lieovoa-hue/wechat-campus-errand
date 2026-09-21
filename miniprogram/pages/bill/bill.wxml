@@ -1,0 +1,41 @@
+<view class="container {{themeClass}} theme-root">
+  <!-- 全局通知条：管理员发布的公告，可关闭（本次会话内不再出现） -->
+  <notice-bar />
+  <!-- 收支汇总 -->
+  <view class="card summary">
+    <view class="sum-item">
+      <view class="sub">累计任务收入</view>
+      <view class="sum-value income">¥{{summary.income}}</view>
+    </view>
+    <view class="sum-item">
+      <view class="sub">累计服务费支出</view>
+      <view class="sum-value expense">¥{{summary.expense}}</view>
+    </view>
+  </view>
+
+  <view class="card notice">
+    <view class="sub">账单仅作记账展示：平台不托管任务酬金，酬金由雇主与跑腿员线下转账，不支持提现。</view>
+  </view>
+
+  <scroll-view class="tab-scroll" scroll-x enable-flex>
+    <view wx:for="{{typeTabs}}" wx:key="label"
+          class="tab-item {{activeType === item.value ? 'tab-active' : ''}}"
+          data-value="{{item.value}}" bindtap="onTabChange">{{item.label}}</view>
+  </scroll-view>
+
+  <view class="card row-between" wx:for="{{list}}" wx:key="id"
+        data-task-id="{{item.task_id}}" bindtap="goTask">
+    <view class="flex-1">
+      <view class="bill-title">{{item.typeText}}</view>
+      <view class="sub line">{{item.remark}}</view>
+      <view class="sub line">{{item.timeText}} · 关联任务 #{{item.task_id}}</view>
+    </view>
+    <view class="bill-amount {{item.type === 1 ? 'income' : 'expense'}}">
+      {{item.type === 1 ? '+' : '-'}}{{item.amountText}}
+    </view>
+  </view>
+
+  <view class="empty" wx:if="{{list.length === 0 && !loading}}">暂无账单记录</view>
+  <page-footer />
+  <view class="safe-bottom"></view>
+</view>

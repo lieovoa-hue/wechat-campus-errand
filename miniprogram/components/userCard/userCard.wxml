@@ -1,0 +1,43 @@
+<!-- 用户 mini 卡片：头像 + 角色 + 昵称 + 身份标识 + 账号ID + 学号 -->
+<view
+  class="mini-card {{clickable ? 'mini-card-clickable' : ''}}"
+  hover-class="{{clickable ? 'mini-card-hover' : 'none'}}"
+  hover-stay-time="80"
+  bindtap="onTap"
+>
+  <!-- 头像可点开看大图：catchtap 拦住冒泡，避免同时触发整卡的 usertap（查看用户详情） -->
+  <view class="mini-avatar-wrap" catchtap="previewAvatar">
+    <image wx:if="{{person.avatarUrl}}" class="mini-avatar" src="{{person.avatarUrl}}" mode="aspectFill" />
+    <view wx:else class="mini-avatar mini-avatar-ph">跑</view>
+    <!-- 已认证用户头像右下角的小绿点，视觉上一眼区分认证身份 -->
+    <view class="mini-dot" wx:if="{{person.badgeShow && person.badgeClass === 'tag tag-success'}}"></view>
+  </view>
+
+  <view class="mini-body">
+    <view class="mini-line-top">
+      <text class="mini-role" wx:if="{{person.label}}">{{person.label}}</text>
+      <text class="mini-name ellipsis">{{person.nickname}}</text>
+      <text class="{{person.badgeClass}}" wx:if="{{person.badgeShow}}">{{person.badgeText}}</text>
+    </view>
+    <view class="mini-meta">
+      <text class="mini-meta-k">账号ID</text>
+      <text class="mini-meta-v">{{person.userIdText}}</text>
+    </view>
+    <view class="mini-meta" wx:if="{{showStudentId}}">
+      <text class="mini-meta-k">学号</text>
+      <text class="mini-meta-v">{{person.studentId || '未填'}}</text>
+    </view>
+    <!-- 手机号 + 拨打：直接落在本人卡片里，不再单独占一块「联系方式」。
+         仅任务双方可见（person.showPhone 由页面判定），陌生人整行不渲染；
+         没填号码时按钮置灰，点了会提示「对方未填写手机号」。 -->
+    <view class="mini-meta" wx:if="{{person.showPhone}}">
+      <text class="mini-meta-k">手机号</text>
+      <text class="mini-meta-v mini-phone">{{person.phone || '未填写手机号'}}</text>
+      <view class="mini-call {{person.phone ? '' : 'mini-call-off'}}"
+            hover-class="mini-call-hover" hover-stay-time="60"
+            catchtap="onCall">拨打</view>
+    </view>
+  </view>
+
+  <view class="mini-arrow" wx:if="{{clickable}}">›</view>
+</view>

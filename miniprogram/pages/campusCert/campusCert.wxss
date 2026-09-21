@@ -1,0 +1,97 @@
+/* =====================================================================
+   校园认证页（v6）
+   ---------------------------------------------------------------------
+   结构：认证状态卡 → 红色规则卡 → 身份卡示例图 → 4 项表单 → 通栏主按钮
+   设计依据：docs/page-design-v1.md 第 16 页
+   颜色 / 间距 / 字号全部引用 app.wxss 第 1 节令牌，页面内不写裸 hex。
+   ===================================================================== */
+
+/* ---------------------------------------------------- 状态卡补充文案 */
+.tips {
+  margin-top: var(--sp-3);
+  line-height: 1.7;
+}
+
+/* ---------------------------------------------------- 上传区块
+   v5 把规则卡和示例图塞进了 .form-item（flex 行）里，与左侧标签、
+   上传框挤成一排，规则文字被压成竖条。这里改为独立的纵向块容器，
+   内部所有元素都占满整行宽度。 */
+.upload-block {
+  padding: var(--sp-6) 0 var(--sp-3);
+  border-top: 1rpx solid var(--line);
+}
+
+.upload-block-label {
+  width: auto;
+  margin-bottom: var(--sp-4);
+  font-size: var(--fs-md);
+  color: var(--text-2);
+}
+
+/* ---------------------------------------------------- 规则卡
+   红色淡底 + 左侧红色竖条：属于「必须遵守」的硬性提示，用危险色而非品牌色。 */
+.cert-rule {
+  position: relative;
+  margin-bottom: var(--sp-5);
+  padding: var(--sp-4) var(--sp-5) var(--sp-4) var(--sp-7);
+  background: var(--danger-soft);
+  border: 1rpx solid var(--danger-line);
+  border-radius: var(--radius-m);
+  color: var(--danger);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  line-height: 40rpx;
+}
+
+.cert-rule::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: var(--sp-4);
+  bottom: var(--sp-4);
+  width: 8rpx;
+  border-radius: 0 4rpx 4rpx 0;
+  background: var(--danger-fill);
+}
+
+/* ---------------------------------------------------- 身份卡示例图
+   套一层浅灰底容器，图片与说明文字形成一组，不再是「裸图贴在卡片上」。 */
+.cert-guide {
+  margin-bottom: var(--sp-5);
+  padding: var(--sp-4);
+  background: var(--surface-2);
+  border: 1rpx solid var(--line);
+  border-radius: var(--radius-m);
+}
+
+.cert-guide-img {
+  width: 100%;
+  border-radius: var(--radius-s);
+  background: var(--surface);
+}
+
+.cert-guide-tip {
+  margin-top: var(--sp-3);
+  font-size: var(--fs-sm);
+  color: var(--text-3);
+  line-height: 1.6;
+  text-align: center;
+}
+
+/* ---------------------------------------------------- 上传区 */
+.upload-area {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+/* ---------------------------------------------------- 提交按钮 */
+.submit {
+  margin: var(--sp-8) 0 var(--sp-4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .upload-box {
+    transition: none;
+  }
+}

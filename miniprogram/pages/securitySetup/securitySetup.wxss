@@ -1,0 +1,128 @@
+/* =====================================================================
+   密保问题设置 / 修改（v6）
+   ---------------------------------------------------------------------
+   结构：橙色须知条 →（修改模式）当前密保验证卡 → 新密保卡 → 通栏主按钮
+   设计依据：docs/page-design-v1.md 第 04 页
+   每题严格「上方是问题、下方是答案」两行结构，避免问题与答案挤在同一栏。
+   ===================================================================== */
+
+/* ---------------------------------------------------- 前置须知
+   用警告色而不是危险色：这是「必须做的一件事」，不是「出错了」。 */
+.notice {
+  padding: var(--sp-5);
+  margin-bottom: var(--sp-6);
+  background: var(--warn-soft);
+  border: 1rpx solid var(--warn-line);
+  border-radius: var(--radius-l);
+}
+
+.notice-title {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.notice-line {
+  margin-top: var(--sp-3);
+  font-size: var(--fs-sm);
+  line-height: 1.7;
+  color: var(--warn);
+}
+
+/* 修改模式下的「当前密保验证」卡：与下方「新密保」卡片靠标题区分 */
+.card-title {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  color: var(--text-1);
+  margin-bottom: var(--sp-2);
+}
+
+/* ---------------------------------------------------- 单道密保题
+   题目区 + 答案区上下排列，中间不加分隔线，靠间距与标签建立层级。 */
+.qa-block {
+  padding: var(--sp-5) 0;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.qa-block:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.qa-label {
+  margin-bottom: var(--sp-3);
+  font-size: var(--fs-sm);
+  color: var(--text-3);
+}
+
+/* 答案标签与上方问题区拉开距离，视觉上明确「下一段开始了」 */
+.qa-label-answer {
+  margin-top: var(--sp-5);
+}
+
+/* 修改模式下回显的当前题目 */
+.qa-question-text {
+  padding: var(--sp-4) var(--sp-5);
+  background: var(--surface-2);
+  border-radius: var(--radius-m);
+  font-size: var(--fs-md);
+  line-height: 1.6;
+  color: var(--text-1);
+  word-break: break-all;
+}
+
+/* ---------------------------------------------------- 选择行 / 输入行
+   两者高度统一取 --touch（88rpx），保证触摸目标达标且视觉同一水平线。 */
+.picker-value {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--touch);
+  padding: 0 var(--sp-5);
+  background: var(--surface-2);
+  border-radius: var(--radius-m);
+  font-size: var(--fs-md);
+  color: var(--text-1);
+}
+
+.picker-text {
+  flex: 1;
+  min-width: 0;
+  word-break: break-all;
+}
+
+/* 折叠箭头：用边框旋转画出来，不用文字符号（字形在不同机型上差异大） */
+.picker-arrow {
+  flex: none;
+  width: 16rpx;
+  height: 16rpx;
+  margin-left: var(--sp-4);
+  border-right: 3rpx solid var(--text-4);
+  border-bottom: 3rpx solid var(--text-4);
+  transform: rotate(45deg) translate(-4rpx, -4rpx);
+  font-size: 0;
+  color: transparent;
+}
+
+.qa-input {
+  width: 100%;
+  min-height: var(--touch);
+  padding: 0 var(--sp-5);
+  box-sizing: border-box;
+  background: var(--surface-2);
+  border-radius: var(--radius-m);
+  font-size: var(--fs-md);
+  color: var(--text-1);
+}
+
+/* 自定义问题输入框：白底 + 描边，与上方「选择内置题」的行区分开 */
+.qa-custom-input {
+  margin-top: var(--sp-3);
+  background: var(--surface);
+  border: 1rpx solid var(--line-strong);
+}
+
+/* ---------------------------------------------------- 提交 */
+.submit {
+  margin: var(--sp-8) 0 var(--sp-4);
+}

@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "忘记密码",
+  "usingComponents": {
+    "page-footer": "/components/pageFooter/pageFooter",
+    "notice-bar": "/components/noticeBar/noticeBar"
+  }
+}

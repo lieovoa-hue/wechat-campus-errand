@@ -1,0 +1,107 @@
+<!--
+  登录页（只负责登录）
+  · 顶部品牌区：一句话说清小程序是干什么的
+  · 表单：账号（账号ID 或 学号）+ 密码
+  · 协议勾选：必须同意《用户服务协议》与《隐私政策》才能登录（与注册页同一套交互）
+  · 底部小字：注册 / 忘记密码 各自跳到独立页面
+  · 长按 Logo 触发后端连通性自检（排障用，普通用户不会误触）
+-->
+<view class="auth-page {{themeClass}} theme-root">
+  <!-- 全局通知条：管理员发布的公告，可关闭（本次会话内不再出现） -->
+  <notice-bar />
+  <!-- 统一确认弹窗（自绘，深色自适应）：由 utils/dialog.js 通过 selectComponent 调用 -->
+  <confirm-dialog id="confirmDialog" />
+
+  <!-- ============ 顶部品牌 ============ -->
+  <view class="auth-hero">
+    <image class="auth-logo" src="/images/logo.png" mode="aspectFill" bindlongpress="checkServer" />
+    <view class="auth-title">同学,先送我的</view>
+    <view class="auth-subtitle">同学互助 · 代取快递 · 代买代送</view>
+  </view>
+
+  <!-- ============ 登录表单 ============ -->
+  <view class="auth-card">
+    <view class="auth-card-title">欢迎回来</view>
+    <view class="auth-card-desc">用「账号ID」或「学号」登录</view>
+
+    <view class="auth-field">
+      <view class="auth-label">账号</view>
+      <input
+        class="auth-input"
+        value="{{account}}"
+        data-field="account"
+        bindinput="onInput"
+        confirm-type="next"
+        placeholder="账号ID 或 学号"
+        placeholder-class="auth-placeholder"
+      />
+    </view>
+
+    <view class="auth-field">
+      <view class="auth-label">密码</view>
+      <input
+        class="auth-input"
+        password="{{!showPassword}}"
+        value="{{password}}"
+        data-field="password"
+        bindinput="onInput"
+        confirm-type="done"
+        bindconfirm="doLogin"
+        placeholder="请输入登录密码"
+        placeholder-class="auth-placeholder"
+      />
+      <!-- 密码显隐：小眼睛图标（明文时点亮、掩码时带一道斜线），手机上打错密码不用整段重输 -->
+      <view
+        class="auth-eye {{showPassword ? 'is-on' : 'is-off'}}"
+        aria-label="显示或隐藏密码"
+        bindtap="togglePassword"
+      >
+        <view class="ico ico-eye {{showPassword ? 'eye-plain' : 'ico-eye-off'}}"></view>
+      </view>
+    </view>
+
+    <!-- 协议勾选：登录与注册都必须同意，点击书名号内的协议名可查看全文 -->
+    <view class="auth-agree" bindtap="toggleAgree">
+      <view class="auth-checkbox {{agreed ? 'auth-checkbox-on' : ''}}">
+        <text wx:if="{{agreed}}">✓</text>
+      </view>
+      <view class="auth-agree-text">
+        我已阅读并同意<text class="auth-agree-link" catchtap="openAgreement" data-type="service">《用户服务协议》</text>与<text class="auth-agree-link" catchtap="openAgreement" data-type="privacy">《隐私政策》</text>
+      </view>
+    </view>
+
+    <view class="auth-submit {{submitting ? 'auth-submit-disabled' : ''}}" bindtap="doLogin">
+      {{submitting ? '登录中…' : '登 录'}}
+    </view>
+
+    <!-- 底部次要路径：注册 / 忘记密码 -->
+    <view class="auth-links">
+      <view class="auth-link" bindtap="goRegister">{{msg.goRegister}}</view>
+      <view class="auth-link" bindtap="goForgot">{{msg.forgetPassword}}</view>
+    </view>
+  </view>
+
+  <view class="auth-tip" style="margin:32rpx 44rpx 0;text-align:center">
+    连续输错密码 5 次会锁定账号 15 分钟；换手机登录需要回答密保问题。
+  </view>
+
+  <!--
+    协议阅读弹窗
+    · 弹窗必须放在 .mask 内部：.mask 是 fixed + flex 居中的容器，
+      弹窗作为兄弟节点时会跟着页面普通流排版，导致位置漂移、底部按钮被屏幕裁掉。
+    · catchtap="noop"：点弹窗内容不冒泡到遮罩，避免误触关闭。
+  -->
+  <view class="mask" wx:if="{{showAgreement}}" bindtap="closeAgreement">
+    <view class="modal" catchtap="noop">
+      <view class="modal-title">{{agreementTitle}}</view>
+      <scroll-view class="auth-doc-body" scroll-y enhanced show-scrollbar>
+        <view class="auth-doc-p" wx:for="{{agreementParagraphs}}" wx:key="index">{{item}}</view>
+      </scroll-view>
+      <view class="modal-foot">
+        <view class="modal-btn modal-btn-ok" bindtap="closeAgreement">我已阅读</view>
+      </view>
+    </view>
+  </view>
+
+  <page-footer />
+</view>

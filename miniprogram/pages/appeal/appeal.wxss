@@ -1,0 +1,100 @@
+/* =====================================================================
+   申诉中心（v6）
+   ---------------------------------------------------------------------
+   结构：提交卡（次数条 + 文本域 + 主按钮）→「我的申诉记录」列表
+   设计依据：docs/page-design-v1.md 第 18 页
+   申诉是低频但高焦虑的操作，因此把「还剩几次」「什么时候重置」
+   前置成一条醒目提示，避免用户写完整段话才被告知今天不能再提交。
+   ===================================================================== */
+
+/* ---------------------------------------------------- 次数提示条 */
+.quota {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--sp-5);
+  padding: var(--sp-4) var(--sp-5);
+  background: var(--brand-soft);
+  border-radius: var(--radius-m);
+}
+
+.quota-k {
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+}
+
+.quota-v {
+  font-size: var(--fs-sm);
+  color: var(--text-3);
+}
+
+.quota-num {
+  font-size: var(--fs-title);
+  font-weight: 700;
+  color: var(--brand-deep);
+}
+
+/* ---------------------------------------------------- 文本域
+   高度 240rpx 约可容纳 5 行，正好是「说清楚一件事」的合理篇幅；
+   右下角用字数提示替代占位符，用户随时知道还能写多少。 */
+.textarea {
+  width: 100%;
+  height: 240rpx;
+  margin-top: var(--sp-4);
+  padding: var(--sp-5);
+  box-sizing: border-box;
+  background: var(--surface-2);
+  border-radius: var(--radius-m);
+  font-size: var(--fs-md);
+  line-height: 1.65;
+  color: var(--text-1);
+}
+
+.submit {
+  margin-top: var(--sp-6);
+}
+
+.tips {
+  margin-top: var(--sp-4);
+  line-height: 1.7;
+}
+
+/* ---------------------------------------------------- 记录列表 */
+.section {
+  margin: var(--sp-8) 0 var(--sp-4);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.content {
+  margin-top: var(--sp-4);
+  font-size: var(--fs-md);
+  line-height: 1.7;
+  color: var(--text-1);
+  word-break: break-all;
+}
+
+/* 管理员回复：品牌淡底 + 左侧竖条，与用户自己的申诉正文形成主次关系 */
+.reply {
+  position: relative;
+  margin-top: var(--sp-4);
+  padding: var(--sp-4) var(--sp-5) var(--sp-4) var(--sp-6);
+  background: var(--brand-soft);
+  border-radius: var(--radius-m);
+  font-size: var(--fs-body);
+  color: var(--brand-ink);
+  line-height: 1.7;
+  word-break: break-all;
+}
+
+.reply::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: var(--sp-4);
+  bottom: var(--sp-4);
+  width: 8rpx;
+  border-radius: 0 4rpx 4rpx 0;
+  background: var(--brand);
+}

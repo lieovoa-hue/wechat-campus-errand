@@ -1,0 +1,94 @@
+/* =====================================================================
+   头像 / 昵称修改申请（v6）
+   ---------------------------------------------------------------------
+   结构：分段胶囊（头像 / 昵称 / 审核记录）→ 对应表单卡 → 审核记录列表
+   设计依据：docs/page-design-v1.md 第 17 页
+   状态胶囊一律「同色系淡底 + 深色字 + 8rpx 圆角」（见 app.wxss 第 7 节），
+   背景紧贴文字，不会再出现「文字后面框大了一圈」。
+   ===================================================================== */
+
+/* ---------------------------------------------------- 分段胶囊
+   v6 统一口径：与消息中心分类胶囊、列表页状态胶囊完全一致
+   （60rpx 高 / 2rpx 描边 / 选中实心品牌蓝），三个页面的切换控件长得一样。 */
+.tabs {
+  white-space: nowrap;
+  margin-bottom: var(--sp-5);
+}
+
+.tab {
+  display: inline-block;
+  height: 60rpx;
+  line-height: 60rpx;
+  padding: 0 var(--sp-6);
+  margin-right: var(--sp-3);
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+  background: var(--surface);
+  border: 2rpx solid var(--line);
+  border-radius: var(--radius-pill);
+  transition: background-color var(--dur-base) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out),
+    color var(--dur-base) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.tab:active {
+  transform: scale(.96);
+}
+
+.tab-active {
+  font-weight: 600;
+  color: var(--brand-on);
+  background: var(--brand);
+  border-color: var(--brand);
+}
+
+/* ---------------------------------------------------- 上传区
+   头像预览统一按 160rpx 圆形展示：改头像时用户最需要确认的就是「换的是哪张脸」。 */
+.upload-area {
+  display: flex;
+  align-items: flex-start;
+  margin-top: var(--sp-5);
+}
+
+.avatar-img {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 50%;
+  background: var(--surface-3);
+}
+
+/* 上传按钮跟随头像尺寸，避免出现 200rpx 大方块压住下方说明 */
+.upload-area .upload-box {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 50%;
+  font-size: var(--fs-cap);
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* 审核记录里的图片凭证缩略图 */
+.record-img {
+  width: 200rpx;
+  height: 200rpx;
+  margin: var(--sp-4) 0 var(--sp-2);
+  border-radius: var(--radius-m);
+  background: var(--surface-3);
+}
+
+/* ---------------------------------------------------- 说明与按钮 */
+.tips {
+  margin-top: var(--sp-4);
+  line-height: 1.7;
+}
+
+.submit {
+  margin: var(--sp-6) 0 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tab {
+    transition: none;
+  }
+}

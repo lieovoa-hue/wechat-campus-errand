@@ -1,0 +1,10 @@
+{
+  "navigationBarTitleText": "管理员后台",
+  "usingComponents": {
+    "page-footer": "/components/pageFooter/pageFooter",
+    "user-card": "/components/userCard/userCard",
+    "confirm-dialog": "/components/confirmDialog/confirmDialog",
+    "notice-bar": "/components/noticeBar/noticeBar"
+  },
+  "enablePullDownRefresh": false
+}

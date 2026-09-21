@@ -1,0 +1,165 @@
+<!--
+  发布任务
+  结构：快捷模板（网格卡片） → 任务信息（分组表单） → 相关图片 → 费用说明 → 发布按钮
+  设计要点：
+    1) 快捷模板做成 2 列网格卡片，带图标 / 预置酬金 / 预置限时，点一下即可填好大半张表单；
+    2) 短字段（姓名、手机号、取件码）走「左标签 + 右输入」，长字段（地址、备注）走
+       「上标签 + 下输入」，避免长地址被挤成一团；
+    3) 必填项用红色星号标出，并与 submit 的校验口径保持一致。
+-->
+<view class="container {{themeClass}} theme-root">
+  <!-- 全局通知条：管理员发布的公告，可关闭（本次会话内不再出现） -->
+  <notice-bar />
+  <!-- 统一确认弹窗（自绘，深色自适应）：由 utils/dialog.js 通过 selectComponent 调用 -->
+  <confirm-dialog id="confirmDialog" />
+  <!-- 预设模板（「取快递」右上角显示免费代拿次数角标） -->
+  <view class="card">
+    <view class="sec-head">
+      <view class="sec-bar"></view>
+      <view class="sec-title">快捷模板</view>
+      <view class="sec-hint">点一下自动填好</view>
+    </view>
+
+    <view class="tpl-row">
+      <view wx:for="{{templates}}" wx:key="name" class="tpl-card {{activeTpl === item.key ? 'tpl-card-on' : ''}}"
+            hover-class="tpl-card-hover" hover-stay-time="60"
+            data-index="{{index}}" bindtap="applyTemplate">
+        <view class="tpl-ico-box">
+          <image class="tpl-img" src="{{item.img}}" mode="aspectFit" />
+        </view>
+        <view class="tpl-name">{{item.name}}</view>
+        <view class="tpl-meta">{{item.meta}}</view>
+        <view wx:if="{{item.key === 'express' && freeDeliveryCount > 0}}" class="tpl-badge">免费代拿次数^{{freeDeliveryCount}}</view>
+        <view wx:if="{{item.key === 'express' && freeDeliveryCount === 0 && publishCouponCount > 0}}" class="tpl-badge">发布券^{{publishCouponCount}}</view>
+      </view>
+    </view>
+
+    <view class="tpl-note" wx:if="{{freeDeliveryCount > 0}}">
+      您有 {{freeDeliveryCount}} 次免费快递代拿机会（7天内有效，仅限一件包裹）：点击「取快递」模板即自动使用，
+      本次免平台信息服务费，可点下方「取消使用」保留次数。
+    </view>
+  </view>
+
+  <!-- 任务表单 -->
+  <view class="card">
+    <view class="sec-head">
+      <view class="sec-bar"></view>
+      <view class="sec-title">任务信息</view>
+      <view class="sec-hint">带 * 为必填</view>
+    </view>
+
+    <view class="form-item">
+      <view class="form-label"><text class="req">*</text>收件人</view>
+      <input class="form-input" placeholder="收件人姓名" placeholder-class="placeholder"
+             value="{{form.receiverName}}" data-field="receiverName" bindinput="onInput" />
+    </view>
+
+    <view class="form-item">
+      <view class="form-label"><text class="req">*</text>手机号</view>
+      <input class="form-input" type="number" maxlength="11" placeholder="11位收件人手机号"
+             placeholder-class="placeholder"
+             value="{{form.receiverPhone}}" data-field="receiverPhone" bindinput="onInput" />
+    </view>
+
+    <!-- 当前模板提示：一眼看清「为什么这一项是必填」（切换模板只改文案，字段顺序固定不跳版） -->
+    <view class="form-tip" wx:if="{{fieldTip}}">{{fieldTip}}</view>
+
+    <!-- 取件码：选「取快递」模板时为必填（跑腿员凭码取件，没码取不到）；其余模板选填 -->
+    <view class="form-item">
+      <view class="form-label"><text class="req" wx:if="{{pickupCodeRequired}}">*</text>取件码</view>
+      <input class="form-input" maxlength="{{pickupCodeMax}}" placeholder="{{pickupCodePlaceholder}}"
+             placeholder-class="placeholder"
+             value="{{form.pickupCode}}" data-field="pickupCode" bindinput="onInput" />
+    </view>
+
+    <!-- 帮带物品：选带饭 / 打印 / 代买模板时为必填（跑腿员要知道买什么、带什么）；取快递模板选填 -->
+    <view class="form-item">
+      <view class="form-label"><text class="req" wx:if="{{itemNameRequired}}">*</text>帮带物品</view>
+      <input class="form-input" maxlength="{{itemNameMax}}" placeholder="{{itemNamePlaceholder}}"
+             placeholder-class="placeholder"
+             value="{{form.itemName}}" data-field="itemName" bindinput="onInput" />
+    </view>
+
+    <view class="form-block">
+      <view class="form-label"><text class="req">*</text>送达地址</view>
+      <input class="form-input-block" placeholder="如：东区1号宿舍楼302" placeholder-class="placeholder"
+             value="{{form.deliverAddress}}" data-field="deliverAddress" bindinput="onInput" />
+    </view>
+
+    <!-- 详细地址（选填）：对送达地址的补充，如具体门牌 / 房间号 / 工位 -->
+    <view class="form-block">
+      <view class="form-label">详细地址</view>
+      <input class="form-input-block" maxlength="{{detailAddressMax}}" placeholder="选填，如 1号楼B205/20号楼二楼进门左转第三桌"
+             placeholder-class="placeholder"
+             value="{{form.detailAddress}}" data-field="detailAddress" bindinput="onInput" />
+    </view>
+
+    <!-- 酬金与限时都是短数字，并排一行更省纵向空间 -->
+    <view class="form-duo">
+      <view class="duo-item">
+        <view class="form-label"><text class="req">*</text>酬金(元)</view>
+        <input class="duo-input" type="digit" placeholder="0.8" placeholder-class="placeholder"
+               value="{{form.reward}}" data-field="reward" bindinput="onInput" />
+      </view>
+      <view class="duo-item">
+        <view class="form-label">限时(分钟)</view>
+        <input class="duo-input" type="number" placeholder="不限时" placeholder-class="placeholder"
+               value="{{form.timeLimitMin}}" data-field="timeLimitMin" bindinput="onInput" />
+      </view>
+    </view>
+    <view class="form-note">酬金默认 0.8 元，最低可填 0.5 元；限时留空表示不限时</view>
+
+    <view class="form-block">
+      <view class="form-label">任务备注</view>
+      <textarea class="form-textarea" maxlength="200" placeholder="选填，如口味要求、注意事项"
+                placeholder-class="placeholder" value="{{form.remark}}" data-field="remark" bindinput="onInput" />
+    </view>
+  </view>
+
+  <!-- 商品/需求图片（必填） -->
+  <view class="card">
+    <view class="sec-head">
+      <view class="sec-bar"></view>
+      <view class="sec-title">相关图片</view>
+      <view class="sec-hint">必填 1~3 张</view>
+    </view>
+    <view class="img-grid">
+      <view class="img-wrap" wx:for="{{imageUrls}}" wx:key="*this">
+        <image class="img-thumb" src="{{item}}" mode="aspectFill" data-index="{{index}}" bindtap="previewImage" />
+        <view class="img-del" data-index="{{index}}" catchtap="removeImage">
+          <view class="ico ico-close img-del-ico"></view>
+        </view>
+      </view>
+      <view class="upload-box" wx:if="{{images.length < 3}}" hover-class="upload-box-hover" bindtap="chooseImage">
+        <view class="ico ico-plus upload-ico"></view>
+        <view class="upload-text">添加图片</view>
+      </view>
+    </view>
+    <view class="sub">单张不超过 2MB，仅支持 jpg / png / webp</view>
+  </view>
+
+  <!-- 费用与规则（金额与主操作移到固定底栏，避免用户在长表单里找不到按钮） -->
+  <view class="card">
+    <view class="sec-head">
+      <view class="sec-bar"></view>
+      <view class="sec-title">费用与规则</view>
+    </view>
+    <view class="free-tip" wx:if="{{useFreeDelivery}}">已使用邀请码免费代拿权益，本次免收信息服务费<text class="free-cancel" catchtap="cancelFreeDelivery">取消使用</text></view>
+    <view class="free-tip" wx:elif="{{useCoupon}}">已自动使用 1 张发布券抵扣信息服务费（剩余 {{publishCouponCount}} 张）</view>
+    <view class="rule-item">平台信息服务费在发布时支付，酬金由雇主与跑腿员线下转账</view>
+    <view class="rule-item">待接单且 24 小时内无人接单，雇主可申请退券（返还 1 张发布券）</view>
+    <view class="rule-item" wx:if="{{useFreeDelivery}}">撤销时若仍无人接单，本次免费代拿次数会自动返还</view>
+  </view>
+
+  <view class="pub-foot-space"></view>
+    <view class="safe-bottom"></view>
+</view>
+
+<!-- 固定底栏：左侧服务费，右侧主操作 -->
+<view class="pub-foot {{themeClass}}">
+  <view class="pub-foot-fee">
+    <text class="pub-foot-label">平台服务费</text>
+    <text class="pub-foot-amount {{useFreeDelivery || useCoupon ? 'is-free' : ''}}">¥{{payFee}}</text>
+  </view>
+  <button class="btn btn-primary pub-foot-btn" loading="{{submitting}}" bindtap="submit">{{useFreeDelivery ? '免费发布任务' : (useCoupon ? '用发布券发布任务' : '支付 ¥' + payFee + ' 并发布')}}</button>
+</view>

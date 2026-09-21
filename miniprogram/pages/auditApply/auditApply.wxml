@@ -1,0 +1,66 @@
+<view class="container {{themeClass}} theme-root">
+  <!-- 全局通知条：管理员发布的公告，可关闭（本次会话内不再出现） -->
+  <notice-bar />
+  <view class="tabs">
+    <view class="tab {{tab === 'avatar' ? 'tab-active' : ''}}" data-tab="avatar" bindtap="onTabChange">头像修改</view>
+    <view class="tab {{tab === 'nickname' ? 'tab-active' : ''}}" data-tab="nickname" bindtap="onTabChange">昵称修改</view>
+    <view class="tab {{tab === 'records' ? 'tab-active' : ''}}" data-tab="records" bindtap="onTabChange">审核记录</view>
+  </view>
+
+  <!-- 头像修改 -->
+  <block wx:if="{{tab === 'avatar'}}">
+    <view class="card">
+      <view class="row-between">
+        <view class="title">头像审核状态</view>
+        <view class="tag">{{avatarAuditText || '无申请'}}</view>
+      </view>
+      <view class="upload-area">
+        <view class="img-thumb-wrap" wx:if="{{avatarImgUrl}}">
+          <image class="avatar-img" src="{{avatarImgUrl}}" mode="aspectFill" bindtap="previewAvatar" />
+          <view class="thumb-del" catchtap="deleteAvatarImage">×</view>
+        </view>
+        <view wx:else class="upload-box" bindtap="chooseAvatar">+ 上传新头像</view>
+      </view>
+      <view class="sub tips">单张不超过2MB，仅支持 jpg / png / webp；审核通过后自动生效。</view>
+      <button class="btn btn-primary submit" loading="{{submitting}}" bindtap="submitAvatar">提交头像审核</button>
+    </view>
+  </block>
+
+  <!-- 昵称修改 -->
+  <block wx:if="{{tab === 'nickname'}}">
+    <view class="card">
+      <view class="form-item">
+        <view class="form-label">当前昵称</view>
+        <view class="form-input">{{user.nickname}}</view>
+      </view>
+      <view class="form-item">
+        <view class="form-label">新昵称</view>
+        <input class="form-input" placeholder="不超过30字" placeholder-class="placeholder"
+               value="{{nickname}}" bindinput="onNicknameInput" />
+      </view>
+      <view class="sub tips">剩余修改次数：{{nicknameCountText}}（驳回不扣次数，通过才消耗）</view>
+      <button class="btn btn-primary submit" loading="{{submitting}}"
+              disabled="{{!nicknameUnlimited && user.nicknameModifyCount <= 0}}" bindtap="submitNickname">提交昵称审核</button>
+    </view>
+  </block>
+
+  <!-- 审核记录 -->
+  <block wx:if="{{tab === 'records'}}">
+    <view class="card" wx:for="{{records}}" wx:key="id">
+      <view class="row-between">
+        <view class="title">{{item.typeText}}</view>
+        <view class="{{item.status === 2 ? 'tag tag-success' : (item.status === 3 ? 'tag tag-danger' : 'tag tag-warn')}}">
+          {{item.statusText}}
+        </view>
+      </view>
+      <view class="sub tips" wx:if="{{item.contentText}}">申请内容：{{item.contentText}}</view>
+      <view class="sub tips" wx:if="{{item.contentImage}}">申请内容：</view>
+      <image wx:if="{{item.contentImage}}" class="record-img" src="{{item.contentImage}}" mode="aspectFill" />
+      <view class="sub" wx:if="{{item.reject_reason}}">驳回原因：{{item.reject_reason}}</view>
+      <view class="sub">{{item.timeText}}</view>
+    </view>
+    <view class="empty" wx:if="{{records.length === 0}}">暂无审核记录</view>
+  </block>
+  <page-footer />
+  <view class="safe-bottom"></view>
+</view>

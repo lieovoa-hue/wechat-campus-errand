@@ -1,0 +1,38 @@
+<!--
+  消息详情
+  结构：标题卡（类型标签 + 标题 + 时间） → 正文卡 → 复制按钮
+  正文字号比列表大一档（30rpx）、行高 1.75，长文也能顺畅读下去。
+-->
+<view class="md-page {{themeClass}} theme-root">
+  <!-- 全局通知条：管理员发布的公告，可关闭（本次会话内不再出现） -->
+  <notice-bar />
+  <block wx:if="{{msg}}">
+    <view class="md-card">
+      <view class="md-head">
+        <view class="md-tag md-tag-{{typeClass}}">{{typeText}}</view>
+        <view class="md-time">{{timeText}}</view>
+      </view>
+      <view class="md-title">{{msg.title}}</view>
+      <view class="md-sub">{{fullTimeText}}</view>
+    </view>
+
+    <view class="md-card md-body-card">
+      <view class="md-body">{{msg.content}}</view>
+    </view>
+
+    <view class="md-actions">
+      <view class="md-btn" hover-class="md-btn-press" hover-stay-time="60" bindtap="copyContent">复制消息内容</view>
+    </view>
+  </block>
+
+  <!-- 加载中：用骨架块占位，避免白屏 -->
+  <view class="md-card" wx:elif="{{loading}}">
+    <view class="skeleton skeleton-line" style="width:40%"></view>
+    <view class="skeleton skeleton-line" style="width:70%;margin-top:28rpx"></view>
+    <view class="skeleton skeleton-line" style="width:100%;margin-top:48rpx"></view>
+    <view class="skeleton skeleton-line" style="width:88%"></view>
+    <view class="skeleton skeleton-line" style="width:60%"></view>
+  </view>
+
+  <view class="empty" wx:else>消息不存在或已被清除</view>
+</view>

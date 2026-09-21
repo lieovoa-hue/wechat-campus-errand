@@ -1,0 +1,38 @@
+{
+  "light": {
+    "navBgColor": "#ffffff",
+    "navTxtStyle": "black",
+    "bgColor": "#f5f7fa",
+    "bgTxtStyle": "light",
+    "tabColor": "#6b7688",
+    "tabSelColor": "#2b5ce6",
+    "tabBgColor": "#ffffff",
+    "tabBorderStyle": "black",
+    "tabIconHome": "images/tab/home.png",
+    "tabIconHomeActive": "images/tab/home-active.png",
+    "tabIconPublish": "images/tab/publish.png",
+    "tabIconPublishActive": "images/tab/publish-active.png",
+    "tabIconTask": "images/tab/task.png",
+    "tabIconTaskActive": "images/tab/task-active.png",
+    "tabIconProfile": "images/tab/profile.png",
+    "tabIconProfileActive": "images/tab/profile-active.png"
+  },
+  "dark": {
+    "navBgColor": "#12151b",
+    "navTxtStyle": "white",
+    "bgColor": "#0f1116",
+    "bgTxtStyle": "dark",
+    "tabColor": "#8a93a3",
+    "tabSelColor": "#6d8fff",
+    "tabBgColor": "#12151b",
+    "tabBorderStyle": "black",
+    "tabIconHome": "images/tab/home-dark.png",
+    "tabIconHomeActive": "images/tab/home-active-dark.png",
+    "tabIconPublish": "images/tab/publish-dark.png",
+    "tabIconPublishActive": "images/tab/publish-active-dark.png",
+    "tabIconTask": "images/tab/task-dark.png",
+    "tabIconTaskActive": "images/tab/task-active-dark.png",
+    "tabIconProfile": "images/tab/profile-dark.png",
+    "tabIconProfileActive": "images/tab/profile-active-dark.png"
+  }
+}

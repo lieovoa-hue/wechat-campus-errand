@@ -1,0 +1,93 @@
+<view class="container {{themeClass}} theme-root" wx:if="{{task}}">
+  <!-- 全局通知条：管理员发布的公告，可关闭（本次会话内不再出现） -->
+  <notice-bar />
+  <!-- 编辑规则前置提示：3 分钟频率限制 + 状态变更即失败 -->
+  <view class="rule-note">
+    同一任务两次编辑（含加酬金）间隔至少 3 分钟；任务状态发生变化时编辑会自动失败。
+  </view>
+
+  <view class="card">
+    <view class="row-between">
+      <view class="title">任务 #{{task.id}}</view>
+      <view class="tag">{{takenMode ? '进行中-部分可编辑' : '待接单-可编辑'}}</view>
+    </view>
+    <!-- 订单号：编辑时明确「改的是哪一单」，便于与后台核对 -->
+    <view class="order-no" wx:if="{{task.orderNo}}">订单号 {{task.orderNo}}</view>
+
+    <!-- 进行中：送达地址 / 限时 已被锁定（跑腿员已按原地址原限时在路上跑，改了等于让人白跑） -->
+    <block wx:if="{{takenMode}}">
+      <view class="lock-note">{{lockNoteText}}</view>
+      <view class="form-item">
+        <view class="form-label">送达地址（已锁定）</view>
+        <view class="form-input form-input-locked">{{form.deliverAddress}}</view>
+      </view>
+      <view class="form-item">
+        <view class="form-label">限时（已锁定）</view>
+        <view class="form-input form-input-locked">{{timeLimitText}}</view>
+      </view>
+    </block>
+
+    <!-- 待接单：送达地址 / 限时 可编辑 -->
+    <block wx:else>
+      <view class="form-item">
+        <view class="form-label">送达地址</view>
+        <input class="form-input" value="{{form.deliverAddress}}" data-field="deliverAddress" bindinput="onInput" />
+      </view>
+      <view class="form-item">
+        <view class="form-label">限时(分钟)</view>
+        <input class="form-input" type="number" placeholder="留空表示不限时" placeholder-class="placeholder"
+               value="{{form.timeLimitMin}}" data-field="timeLimitMin" bindinput="onInput" />
+      </view>
+    </block>
+
+    <!-- 收件人信息：待接单 / 进行中 都可编辑（接单人可能要靠它联系雇主） -->
+    <view class="form-item">
+      <view class="form-label">收件人姓名</view>
+      <input class="form-input" value="{{form.receiverName}}" data-field="receiverName" bindinput="onInput" />
+    </view>
+    <view class="form-item">
+      <view class="form-label">收件人手机号</view>
+      <input class="form-input" type="number" maxlength="11" value="{{form.receiverPhone}}"
+             data-field="receiverPhone" bindinput="onInput" />
+    </view>
+
+    <!-- 任务类型在发布时已确定，编辑只改内容不改类型：取快递填取件码，其他类型填帮带物品 -->
+    <view class="form-item" wx:if="{{isExpress}}">
+      <view class="form-label">取件码</view>
+      <input class="form-input" maxlength="{{pickupCodeMax}}" placeholder="如：菜鸟驿站取件码 6-8-1234"
+             placeholder-class="placeholder" value="{{form.pickupCode}}"
+             data-field="pickupCode" bindinput="onInput" />
+    </view>
+    <view class="form-item" wx:else>
+      <view class="form-label">帮带物品</view>
+      <input class="form-input" maxlength="{{itemNameMax}}" placeholder="如：一份黄焖鸡米饭（微辣）"
+             placeholder-class="placeholder" value="{{form.itemName}}"
+             data-field="itemName" bindinput="onInput" />
+    </view>
+
+    <view class="form-item">
+      <view class="form-label">详细地址</view>
+      <input class="form-input" maxlength="{{detailAddressMax}}" placeholder="如：1号楼B205"
+             placeholder-class="placeholder" value="{{form.detailAddress}}"
+             data-field="detailAddress" bindinput="onInput" />
+    </view>
+    <view class="form-item">
+      <view class="form-label">酬金(元)</view>
+      <input class="form-input" type="digit" value="{{form.reward}}" data-field="reward" bindinput="onInput" />
+    </view>
+    <view class="form-tip">酬金仅可提高，不可降低；调整成功后会通知跑腿员</view>
+    <view class="form-item form-item-area">
+      <view class="form-label">任务备注</view>
+      <textarea class="form-textarea" maxlength="200" value="{{form.remark}}"
+                data-field="remark" bindinput="onInput" />
+    </view>
+  </view>
+
+  <button class="btn btn-primary submit" loading="{{submitting}}" bindtap="submit">保存修改</button>
+  <page-footer />
+  <view class="safe-bottom"></view>
+</view>
+<!-- 兜底页：任务不存在 / 直接进入该页时不再整页空白（深色下会是一整张浅色空页） -->
+<view class="container {{themeClass}} theme-root" wx:else>
+  <view class="empty">{{msgTaskNotFound}}</view>
+</view>

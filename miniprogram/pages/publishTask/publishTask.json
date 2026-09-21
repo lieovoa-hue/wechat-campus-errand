@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "发布任务",
+  "usingComponents": {
+    "page-footer": "/components/pageFooter/pageFooter",
+    "confirm-dialog": "/components/confirmDialog/confirmDialog",
+    "notice-bar": "/components/noticeBar/noticeBar"
+  }
+}

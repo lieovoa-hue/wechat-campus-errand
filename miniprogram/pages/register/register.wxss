@@ -1,0 +1,47 @@
+/* 注册页样式：视觉语言全部来自 styles/auth.wxss */
+@import "../../styles/auth.wxss";
+
+/* ================= 「更多」折叠区（手机号 / 昵称 / 邀请码） ================= */
+/* 默认收起：注册首屏只留必填项，点这里才展开三个选填字段 */
+.auth-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-5) 0 var(--sp-2);
+}
+
+.auth-more-hover {
+  opacity: 0.6;
+}
+
+.auth-more-txt {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--brand);
+}
+
+/* 箭头用边框自绘：不依赖字体里的 ⌄ 字符，各机型渲染一致。
+   45° = 朝下（收起）；旋转到 -135° = 朝上（展开） */
+.auth-more-arrow {
+  width: 14rpx;
+  height: 14rpx;
+  margin: 6rpx 0 0 var(--sp-2);
+  border-right: 3rpx solid var(--brand);
+  border-bottom: 3rpx solid var(--brand);
+  transform: rotate(45deg);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.auth-more-arrow-up {
+  transform: rotate(-135deg);
+}
+
+/* 收起且已正确填写时的回执角标，避免用户以为填的内容被丢掉了 */
+.auth-more-badge {
+  margin-left: var(--sp-3);
+  padding: 2rpx 12rpx;
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-cap);
+  color: var(--brand-deep);
+  background: var(--brand-soft);
+}

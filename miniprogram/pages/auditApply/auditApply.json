@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "资料修改申请",
+  "usingComponents": {
+    "page-footer": "/components/pageFooter/pageFooter",
+    "notice-bar": "/components/noticeBar/noticeBar"
+  }
+}

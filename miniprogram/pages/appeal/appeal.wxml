@@ -1,0 +1,30 @@
+<view class="container {{themeClass}} theme-root">
+  <!-- 全局通知条：管理员发布的公告，可关闭（本次会话内不再出现） -->
+  <notice-bar />
+  <view class="card">
+    <view class="title">提交申诉</view>
+
+    <!-- 次数提示条：剩余次数用大字，右侧说明重置规则 -->
+    <view class="quota">
+      <view class="quota-k">今日剩余申诉次数</view>
+      <view class="quota-v"><text class="quota-num">{{2 - todayCount}}</text> / 2 · 每日 0 点重置</view>
+    </view>
+    <textarea class="textarea" maxlength="200" placeholder="请描述您的问题，例如账号被误封、任务纠纷等"
+              placeholder-class="placeholder" value="{{content}}" bindinput="onInput" />
+    <button class="btn btn-primary submit" loading="{{submitting}}" bindtap="submit">提交申诉</button>
+    <view class="sub tips">每日最多提交 2 条申诉；管理员回复后会推送站内消息通知您。</view>
+  </view>
+
+  <view class="title section">我的申诉记录</view>
+  <view class="card" wx:for="{{list}}" wx:key="id">
+    <view class="row-between">
+      <view class="sub">{{item.timeText}}</view>
+      <view class="{{item.status === 2 ? 'tag tag-success' : 'tag tag-warn'}}">{{item.statusText}}</view>
+    </view>
+    <view class="content">{{item.content}}</view>
+    <view class="reply" wx:if="{{item.admin_reply}}">管理员回复：{{item.admin_reply}}</view>
+  </view>
+  <view class="empty" wx:if="{{list.length === 0}}">暂无申诉记录</view>
+  <page-footer />
+  <view class="safe-bottom"></view>
+</view>

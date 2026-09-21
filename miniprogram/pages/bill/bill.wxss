@@ -1,0 +1,76 @@
+/**
+ * 收支账单样式（v6 · 纯记账展示，无提现入口）
+ * ---------------------------------------------------------------------
+ * 顶部汇总卡改为品牌渐变，白字 + 半透明分隔线（渐变的两端与投影都走令牌：
+ * 深色下浅蓝底 + 白字只有 2:1，必须整体压暗，详见 app.wxss 的 --brand-hero-from）；
+ * 流水列表沿用 styles/list.wxss 的状态胶囊与卡片语言。
+ * 设计依据：docs/page-design-v1.md 第 15 页
+ */
+@import "../../styles/list.wxss";
+
+/* ---------------------------------------------------- 顶部收支合计 */
+.summary {
+  display: flex;
+  align-items: center;
+  padding: var(--sp-6);
+  background: linear-gradient(135deg, var(--brand-hero-from) 0%, var(--brand-hero-to) 100%);
+  box-shadow: var(--shadow-hero);
+}
+
+.sum-item {
+  flex: 1;
+  min-width: 0;
+}
+
+.sum-item + .sum-item {
+  padding-left: var(--sp-5);
+  border-left: 1rpx solid rgba(255, 255, 255, .3);
+}
+
+/* 渐变底上的说明文字统一降一档亮度，保证白字金额仍是最高对比 */
+.summary .sub {
+  color: rgba(255, 255, 255, .78);
+}
+
+/* 用「.summary .sum-value」提高优先级，覆盖列表样式里的 .income / .expense 颜色 */
+.summary .sum-value {
+  margin-top: var(--sp-2);
+  font-size: var(--fs-h1);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--brand-on);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------- 记账说明条 */
+.notice {
+  background: var(--warn-soft);
+}
+
+/* ---------------------------------------------------- 流水行 */
+.bill-title {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.line {
+  margin-top: var(--sp-2);
+}
+
+.bill-amount {
+  flex: none;
+  margin-left: var(--sp-5);
+  font-size: var(--fs-title);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 收入用成功色、支出用金额色，避免「服务费支出」被误读成罚款 */
+.income {
+  color: var(--success);
+}
+
+.expense {
+  color: var(--money);
+}

@@ -1,0 +1,29 @@
+# ---------- 依赖与产物 ----------
+node_modules/
+logs/
+backend/logs/
+*.log
+.DS_Store
+Thumbs.db
+
+# ---------- 本地私有配置 / 密钥：绝不提交 ----------
+# backend/.env 里含 JWT_SECRET、WX_APP_SECRET、DB_PASSWORD、商户密钥等最高权限凭据
+**/.env
+**/.env.local
+backend/cert/
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# ---------- 本机内网穿透地址记录（含真实隧道域名） ----------
+cpolar-url.txt
+
+# ---------- 与业务无关的第三方 agent 技能包 ----------
+.agents/
+skills-lock.json
+
+# ---------- 运行时产物（PID 记录等） ----------
+.serverpid
+*.pid
+
+# ---------- 微信开发者工具的本机私有配置 ----------
+*.private.config.json

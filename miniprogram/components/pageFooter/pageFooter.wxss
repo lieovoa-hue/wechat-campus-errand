@@ -1,0 +1,48 @@
+/* =====================================================================
+   页面底部「官方 Q 群」提示（v6 · 全局统一）
+   ---------------------------------------------------------------------
+   每页最底部留一块安静的落款区：一条极细分隔线 + 一行说明 + 一行群号。
+   目的是让页面「有收尾」，而不是在内容后突然断掉（Demo 感的主要来源之一）。
+   ===================================================================== */
+
+.page-footer {
+  margin-top: var(--sp-10);
+  padding: var(--sp-6) 0 var(--sp-2);
+  text-align: center;
+}
+
+.page-footer::before {
+  content: '';
+  display: block;
+  width: 64rpx;
+  height: 4rpx;
+  margin: 0 auto var(--sp-5);
+  border-radius: 2rpx;
+  background: var(--line-strong);
+  opacity: .7;
+}
+
+.footer-tip {
+  font-size: var(--fs-sm);
+  color: var(--text-3);
+  line-height: 1.7;
+}
+
+/* 群号：可点击一键复制（不加按钮 / 提示文字，只用按压反馈表明「这里能点」） */
+.footer-group {
+  margin-top: var(--sp-2);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  letter-spacing: .5rpx;
+  color: var(--brand-deep);
+  /* 数字区域独立成块，避免点击热区过大误触 */
+  display: inline-block;
+  padding: var(--sp-1) var(--sp-3);
+  border-radius: var(--radius-s);
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+/* 按压反馈：轻微变色，明确「点一下会复制」，但不需要任何额外说明文字 */
+.footer-group-hover {
+  background: var(--brand-soft);
+}

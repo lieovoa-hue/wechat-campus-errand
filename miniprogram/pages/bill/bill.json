@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "收支账单",
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "page-footer": "/components/pageFooter/pageFooter",
+    "notice-bar": "/components/noticeBar/noticeBar"
+  }
+}

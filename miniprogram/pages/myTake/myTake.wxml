@@ -1,0 +1,121 @@
+<view class="container {{themeClass}} theme-root">
+  <!-- 全局通知条：管理员发布的公告，可关闭（本次会话内不再出现） -->
+  <notice-bar />
+  <!-- 统一确认弹窗（自绘，深色自适应）：由 utils/dialog.js 通过 selectComponent 调用 -->
+  <confirm-dialog id="confirmDialog" />
+  <scroll-view class="tab-scroll" scroll-x enable-flex>
+    <view wx:for="{{statusTabs}}" wx:key="label"
+          class="tab-item {{activeStatus === item.value ? 'tab-active' : ''}}"
+          data-value="{{item.value}}" bindtap="onTabChange">{{item.label}}</view>
+  </scroll-view>
+
+  <view class="card task-card task-card-s{{item.status}}" wx:for="{{list}}" wx:key="id">
+    <view bindtap="goDetail" data-id="{{item.id}}">
+      <view class="row-between">
+        <view class="task-addr ellipsis">{{item.deliverAddress}}</view>
+        <view class="tag-group">
+          <!-- 未送达申诉角标：红色，提醒雇主已反馈未送达、已停止自动确认收货 -->
+          <view class="tag tag-danger" wx:if="{{item.isDisputed}}">已申诉</view>
+          <!-- 超时送达角标：本次送达超过了限时，雇主可据此扣减酬金 -->
+          <view class="tag tag-danger" wx:if="{{item.isLateDelivery && item.status === 2}}">超时送达</view>
+          <!-- 已超时角标：任务仍在进行中但已超过限时（酬金已自动扣减，任务不取消，可继续送达） -->
+          <view class="tag tag-danger" wx:if="{{item.isOvertime && item.status === 1}}">已超时</view>
+          <view class="{{item.statusClass}}">{{item.statusText}}</view>
+        </view>
+      </view>
+
+      <!-- 雇主：头像 / 昵称 / 账号ID / 学号 / 认证标识（管理员为红色标识，认证用户为绿色「已认证」） -->
+      <view class="person-row" wx:if="{{item.ownerPerson}}">
+        <image wx:if="{{item.ownerPerson.avatarUrl}}" class="person-avatar" src="{{item.ownerPerson.avatarUrl}}" mode="aspectFill"
+               catchtap="previewAvatar" data-url="{{item.ownerPerson.avatarUrl}}" />
+        <view wx:else class="person-avatar person-avatar-placeholder">跑</view>
+        <view class="flex-1 person-info">
+          <view class="row">
+            <text class="person-role">{{item.ownerPerson.label}}</text>
+            <text class="person-name ellipsis">{{item.ownerPerson.nickname}}</text>
+            <text class="{{item.ownerPerson.badgeClass}}" wx:if="{{item.ownerPerson.badgeShow}}">{{item.ownerPerson.badgeText}}</text>
+          </view>
+          <view class="sub">ID：{{item.ownerPerson.userIdText}}　学号：{{item.ownerPerson.studentId}}</view>
+        </view>
+      </view>
+
+      <!-- 任务信息：送达地址 / 限时 / 跑腿费 / 收件人 / 接单时间 -->
+      <view class="info-line">
+        <text class="info-k">任务编号</text>
+        <text class="info-v">#{{item.id}}</text>
+      </view>
+      <view class="info-line">
+        <text class="info-k">限时</text>
+        <text class="info-v">{{item.limitText}}</text>
+      </view>
+      <!-- 限时倒计时：进行中且设置了限时才有值，倒计时归零后提示已超时 -->
+      <view class="info-line" wx:if="{{item.remainSeconds !== null}}">
+        <text class="info-k">{{countdownLabel}}</text>
+        <text class="info-v {{item.countdownOver ? 'danger' : 'countdown'}}">{{item.countdownOver ? countdownOverText : item.remainText}}</text>
+      </view>
+      <view class="info-line">
+        <text class="info-k">跑腿费</text>
+        <text class="info-v price">¥{{item.rewardText}}（线下结算）</text>
+      </view>
+      <view class="info-line">
+        <text class="info-k">收件人</text>
+        <text class="info-v">{{item.receiverName}} {{item.receiverPhone}}</text>
+      </view>
+      <view class="info-line">
+        <text class="info-k">接单时间</text>
+        <text class="info-v">{{item.takeTimeText}}</text>
+      </view>
+      <view class="info-line" wx:if="{{item.remark}}">
+        <text class="info-k">备注</text>
+        <text class="info-v">{{item.remark}}</text>
+      </view>
+    </view>
+
+    <!-- 进行中：上传送达照片 + 提交已送达 + 取消接单 -->
+    <block wx:if="{{item.status === 1}}">
+      <view class="divider"></view>
+      <!-- 已超时：系统已自动扣减酬金，任务不取消，请尽快送达 -->
+      <view class="sub danger" wx:if="{{item.isOvertime}}">
+        已超过限时，系统已自动扣减酬金 ¥{{item.lateDeductAmount}}（酬金的5%，不足0.5元按0.5元），当前酬金 ¥{{item.rewardText}}；任务未取消，请尽快送达并上传送达照片。
+      </view>
+      <view class="sub">送达照片（至少1张，最多3张）</view>
+      <view class="img-grid" style="margin-top:16rpx">
+        <view class="img-wrap" wx:for="{{item.photos}}" wx:key="*this" wx:for-item="photo" wx:for-index="photoIndex">
+          <image class="img-thumb" src="{{item.photoUrls[photoIndex]}}" mode="aspectFill" />
+          <view class="img-del" data-index="{{index}}" data-photo-index="{{photoIndex}}" catchtap="removePhoto">×</view>
+        </view>
+        <view class="upload-box" wx:if="{{item.photos.length < 3}}"
+              data-index="{{index}}" catchtap="choosePhoto">+ 上传照片</view>
+      </view>
+      <view class="btn-row">
+        <button class="btn {{item.photos.length > 0 ? 'btn-primary' : 'btn-disabled'}} btn-sm"
+                disabled="{{item.photos.length === 0}}"
+                data-index="{{index}}" catchtap="submitFinish">提交已送达</button>
+        <button class="btn btn-plain btn-sm" wx:if="{{item.actions.canCancelTake}}"
+                data-id="{{item.id}}" catchtap="cancelTake">取消接单</button>
+      </view>
+      <view class="sub" wx:if="{{item.photos.length === 0}}">请先上传送达照片</view>
+    </block>
+
+    <!-- 待雇主确认 -->
+    <block wx:if="{{item.status === 2}}">
+      <view class="divider"></view>
+      <view class="sub" wx:if="{{!item.isDisputed}}">已提交送达照片，等待雇主确认；超过2小时未确认系统将自动确认完成。</view>
+      <!-- 雇主已反馈未送达：已停止自动确认收货，需尽快与雇主联系核实 -->
+      <view class="sub danger" wx:if="{{item.isDisputed}}">
+        雇主反馈未正常收到：{{item.disputeReason}}。系统已停止自动确认收货，请尽快与雇主联系核实。
+      </view>
+      <!-- 超时送达：本次送达超过限时，雇主可按规则扣减酬金 -->
+      <view class="sub danger" wx:if="{{item.isLateDelivery && item.status === 2}}">
+        本次送达已超过限时，雇主可根据规则扣减酬金，请主动与雇主沟通。
+      </view>
+    </block>
+  </view>
+
+  <view class="empty" wx:if="{{list.length === 0 && !loading}}">
+    <view>还没有接过任务</view>
+    <view class="sub" style="margin-top:12rpx">去首页任务大厅看看有没有合适的跑腿任务</view>
+  </view>
+  <page-footer />
+  <view class="safe-bottom"></view>
+</view>

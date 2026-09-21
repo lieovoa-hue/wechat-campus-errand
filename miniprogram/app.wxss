@@ -1,0 +1,1618 @@
+/**
+ * =====================================================================
+ * 全局样式 · 校园跑腿小程序设计系统 v6（iOS / Apple HIG 风格）
+ * ---------------------------------------------------------------------
+ * v6 相对 v5 的变化：把「照搬 iOS 系统色」升级为「一套自洽的品牌色板」。
+ *   · 主色定为信任蓝 #2B5CE6：白底 5.6:1、白字于蓝底 5.6:1，文字与按钮双向过 AA，
+ *     全站仍然只有一个强调色，界面靠「留白 + 层级」取胜；
+ *   · 新增辅助色暖橙 #EE6C2D，只出现在金额 / 紧迫 / 权益三类信息上，
+ *     与主色形成冷暖分工，避免「满屏都是蓝」的廉价感；
+ *   · 每个语义色拆成「文字档 / 填充档 / 淡底」三档，文字档按 AA 校准（绿 #0A7A54、
+ *     橙 #B45309、红 #C81E1E），填充档只用于纯装饰色块，从不承载文字；
+ *   · 中性色改为冷灰阶（底 #F5F7FA → 分隔 #E6EAF2 → 描边 #D5DBE6 → 文字四级），
+ *     去掉大面积渐变，卡片是纯白 + 28rpx 大圆角，落在冷灰底上边界自然清晰；
+ *   · 阴影换成带蓝调的中性投影，层次主要靠「白卡 / 灰底」两种材质而非重阴影；
+ *   · 动效沿用 Apple 推荐曲线与时长（按压 120ms、状态切换 220ms、弹窗 320ms），
+ *     只在 transform / opacity 上做动画，保证 60fps；
+ *   · 尊重 prefers-reduced-motion（系统「减弱动态效果」开启时自动降级为交叉淡入）。
+ *
+ * 工程约定：
+ *   1. 颜色 / 间距 / 字号 / 圆角 / 阴影 / 动效时长一律走 page 上的 design token，
+ *      自定义组件内用 var(--x, 兜底值) 形式，变量取不到也不会崩；
+ *   2. 图标一律用 CSS 绘制的 .ico-* 图形（见第 6 节），禁止使用 emoji 当图标
+ *      （emoji 在不同机型上字形、大小、颜色都不一致，无法跟随主题色，专业度差）；
+ *   3. 触摸目标不小于 88rpx（约 44pt）；紧凑行内按钮 .btn-sm 为 72rpx，行间距不小于 16rpx；
+ *   4. 正文与背景对比度不低于 4.5:1（第 1 节 token 已按 WCAG AA 校准，请勿随意调浅）；
+ *   5. 页面与组件里禁止再写裸 hex，颜色一律引用 token 并带兜底值（换主题只改第 1 节）。
+ * =====================================================================
+ */
+
+/* =====================================================================
+   1. 设计令牌（Design Tokens）· Design System v6
+   ---------------------------------------------------------------------
+   四层色系：主色 / 辅助色 / 语义色 / 中性色。四条纪律：
+     ① 全站只有一种强调色（品牌蓝），需要区分层级时用灰阶 + 字号 + 字重；
+     ② 每个语义色分「文字档 / 填充档 / 淡底」三档，三者不可互换；
+     ③ 蓝色在语义上等于「可点击」，禁止拿它当纯装饰；
+     ④ 令牌定下后页面里禁止再写裸 hex，改主题只改这一处。
+   ===================================================================== */
+page {
+  /* ---------- 主色 · 信任蓝 ----------
+     双向达标：白底上当文字 5.6:1，当填充配白字也是 5.6:1。
+     因此全站只需要「一个蓝」，不再出现"填充蓝"与"文字蓝"两套色。 */
+  --brand: #2b5ce6;
+  --brand-deep: #2b5ce6;       /* 文字 / 图标用色（与主色同值，语义更明确） */
+  --brand-ink: #1e49c4;        /* 按压态 / 深色填充 */
+  --brand-light: #5b84f0;      /* 浅色端，仅装饰，不承载文字 */
+  --brand-soft: #eef3ff;       /* 选中行底 / 图标底 */
+  --brand-line: #dce6ff;       /* 品牌色描边 */
+  --brand-on: #ffffff;         /* 品牌色之上的文字 */
+
+  /* ---------- 辅助色 · 暖橙（金额 / 紧迫 / 权益） ---------- */
+  --accent: #ee6c2d;
+  --accent-fill: #ee6c2d;
+  --accent-deep: #c2410c;      /* 金额文字（白底 5.2:1） */
+  --accent-soft: #fff1e7;
+  --money: #c2410c;            /* 兼容旧变量：金额文字 */
+  --money-soft: #fff1e7;
+
+  /* ---------- 语义色（文字档按 AA 校准，填充档用于纯装饰） ---------- */
+  --success: #0a7a54;
+  --success-fill: #0e9f6e;
+  --success-soft: #e8f7f1;
+  --success-line: #c6e9dd;
+  --warn: #b45309;
+  --warn-fill: #d97706;
+  --warn-soft: #fef3e2;
+  --warn-line: #fadfb4;
+  --danger: #c81e1e;
+  --danger-fill: #e02424;
+  --danger-soft: #feecec;
+  --danger-line: #f9c9c9;
+
+  /* ---------- 中性色（冷灰阶：底色 → 分隔 → 文字） ---------- */
+  --bg: #f5f7fa;
+  /* 去掉大面积渐变：iOS 与 Material 都主张用一层中性底托住白卡 */
+  --bg-grad: linear-gradient(180deg, #f5f7fa 0%, #f5f7fa 100%);
+  --surface: #ffffff;
+  --surface-2: #f1f4f9;        /* 卡内嵌块 / 输入框底 */
+  --surface-3: #e6eaf2;        /* 灰标签底 / 分段控件轨道 */
+  --line: #e6eaf2;             /* 分隔线（列表内需左右内缩） */
+  --line-strong: #d5dbe6;      /* 输入框描边 */
+  --text-1: #0f172a;           /* 标题 / 正文（21:1） */
+  --text-2: #475569;           /* 次级文字（8.6:1） */
+  --text-3: #6b7688;           /* 辅助说明（4.6:1，仍满足正文 AA） */
+  --text-4: #9aa5b4;           /* 仅占位符与装饰图形 */
+  --text-on-dark: #ffffff;
+
+  /* ---------- 灰阶与系统色兼容别名（组件内可能引用，勿删） ---------- */
+  --gray: #6b7688;
+  --gray-2: #9aa5b4;
+  --gray-3: #c3cbd8;
+  --gray-4: #d5dbe6;
+  --gray-5: #e6eaf2;
+  --gray-6: #f1f4f9;
+  --ios-blue: #2b5ce6;
+  --ios-green: #0e9f6e;
+  --ios-orange: #d97706;
+  --ios-red: #e02424;
+  --ios-pink: #d6336c;
+  --ios-purple: #7048e8;
+  --ios-teal: #0c8599;
+  --ios-indigo: #4263eb;
+  --ios-yellow: #e8a100;
+
+  /* ---------- 「待雇主确认」状态紫（唯一消费方：.tag-purple） ---------- */
+  --purple-soft: #f3edff;
+  --purple: #5b21b6;
+  /* ---------- 品牌大色块（整块品牌底色 + 白字的表面，如账单汇总卡） ----------
+     浅色下沿用它原本的 #5B84F0 → #1E49C4；深色下必须整体压暗：
+     浅蓝底配白字只有 2:1，既不锐利也读不清，压到 #3F63D6 后是 5.3:1 */
+  --brand-hero-from: #5b84f0;
+  --brand-hero-to: #1e49c4;
+  --shadow-hero: 0 8rpx 20rpx rgba(43, 92, 230, 0.22);
+
+  /* ---------- 间距：4rpx 网格，全站只用这几个值 ---------- */
+  --sp-1: 4rpx;
+  --sp-2: 8rpx;
+  --sp-3: 12rpx;
+  --sp-4: 16rpx;
+  --sp-5: 20rpx;
+  --sp-6: 24rpx;
+  --sp-8: 32rpx;
+  --sp-10: 40rpx;
+  --sp-12: 48rpx;
+  --page-pad: 32rpx;           /* 页面左右安全内边距 */
+
+  /* ---------- 字号阶梯（1pt = 2rpx） ---------- */
+  --fs-cap: 22rpx;             /* 11pt 标签 / 时间 / 角标 */
+  --fs-sm: 24rpx;              /* 12pt 次要说明 */
+  --fs-body: 28rpx;            /* 14pt 正文基准 */
+  --fs-md: 28rpx;              /* 14pt 表单输入 / 信息行 */
+  --fs-lg: 30rpx;              /* 15pt 卡片标题 */
+  --fs-title: 34rpx;           /* 17pt 区块标题 */
+  --fs-h1: 44rpx;              /* 22pt 页面大标题 */
+  --fs-display: 52rpx;         /* 26pt 金额 / 账号 ID */
+
+  /* ---------- 圆角（卡片 28 / 按钮·输入框 16 / 标签 8） ---------- */
+  --radius-s: 8rpx;
+  --radius-m: 16rpx;
+  --radius-l: 28rpx;
+  --radius-xl: 32rpx;
+  --radius-pill: 999rpx;
+
+  /* ---------- 阴影：极浅，层次主要靠「白卡 / 灰底」两种材质 ---------- */
+  --shadow-card: 0 2rpx 8rpx rgba(15, 23, 42, 0.05);
+  --shadow-raise: 0 6rpx 20rpx rgba(15, 23, 42, 0.08);
+  --shadow-brand: 0 8rpx 20rpx rgba(43, 92, 230, 0.22);
+  --shadow-modal: 0 24rpx 64rpx rgba(15, 23, 42, 0.22);
+
+  /* ---------- 遮罩（弹窗 / 图片查看器 / 上传中遮罩） ---------- */
+  --scrim: rgba(15, 23, 42, 0.45);
+  --scrim-soft: rgba(15, 23, 42, 0.32);
+
+  /* ---------- 动效（只动 transform / opacity，保证 60fps） ---------- */
+  --dur-fast: 120ms;           /* 按压即时反馈 */
+  --dur-base: 220ms;           /* 状态切换 */
+  --dur-slow: 320ms;           /* 卡片进场 / 弹窗 */
+  --dur-long: 400ms;           /* 较大位移 */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-spring: cubic-bezier(0.22, 1.2, 0.36, 1);
+
+  /* ---------- 触摸目标 ---------- */
+  --touch: 88rpx;
+
+  background-color: var(--bg);
+  background-image: var(--bg-grad);
+  font-size: var(--fs-body);
+  color: var(--text-1);
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, 'PingFang SC',
+    'Microsoft YaHei', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
+}
+
+/* =====================================================================
+   1.1 暗色主题（Dark Theme · 方案 A「分层深灰」）
+   ---------------------------------------------------------------------
+   启用方式（两条并行，互不冲突）：
+     · 跟随系统：页面根节点由 utils/theme.js 按系统主题挂上 .theme-dark / .theme-light，
+       配合 app.json 的 darkmode + theme.json，导航栏 / tabBar / 窗口底色一起跟着变；
+     · 手动开关：首页顶部的滑动开关写入本地偏好，优先级高于系统设置。
+   为什么不用 @media (prefers-color-scheme) 直接写变量？
+     因为「系统深色 + 用户手动选浅色」这个组合必须能生效，媒体查询没法被类覆盖；
+     改由 JS 解析出唯一主题（偏好 > 系统 > 浅色）再挂类，等于全站只有一个真值来源。
+   设计口径（与浅色一一对应，只换值不换变量名，页面与组件零改动）：
+     · 底色三档：页面底 #0F1116 → 卡片 #171A21 → 卡内块 #1F232C。不用纯黑，
+       避免 OLED 低亮度下的拖影；卡片靠明度差浮起，而不是靠阴影；
+     · 主色与金额在深底上必须提亮：#2B5CE6 → #6D8FFF（对比度 2.6:1 → 5.0:1）、
+       金额 #C2410C → #FF9A5C（7.4:1），否则蓝字、橙字在深底上根本读不清；
+     · 语义色改成「半透明同色底 + 提亮文字」：浅色那套淡底（如 #EEF3FF）在深色下
+       会变成刺眼的亮块，必须换成 rgba 同色底；
+     · 阴影在深色下几乎不可见，层次改由「描边 + 明度差」承担，故只留极淡的黑色投影；
+     · 遮罩加厚（.45 → .6）：深底本身很暗，遮罩不够重的话弹窗「跳不出来」。
+   ===================================================================== */
+
+/* 浅色：系统深色时用户手动切回浅色，靠这个类把变量整体还原 */
+.theme-light {
+  --brand: #2b5ce6;
+  --brand-deep: #2b5ce6;
+  --brand-ink: #1e49c4;
+  --brand-light: #5b84f0;
+  --brand-soft: #eef3ff;
+  --brand-line: #dce6ff;
+  --brand-on: #ffffff;
+
+  --accent: #ee6c2d;
+  --accent-fill: #ee6c2d;
+  --accent-deep: #c2410c;
+  --accent-soft: #fff1e7;
+  --money: #c2410c;
+  --money-soft: #fff1e7;
+
+  --success: #0a7a54;
+  --success-fill: #0e9f6e;
+  --success-soft: #e8f7f1;
+  --success-line: #c6e9dd;
+  --warn: #b45309;
+  --warn-fill: #d97706;
+  --warn-soft: #fef3e2;
+  --warn-line: #fadfb4;
+  --danger: #c81e1e;
+  --danger-fill: #e02424;
+  --danger-soft: #feecec;
+  --danger-line: #f9c9c9;
+
+  --bg: #f5f7fa;
+  --bg-grad: linear-gradient(180deg, #f5f7fa 0%, #f5f7fa 100%);
+  --surface: #ffffff;
+  --surface-2: #f1f4f9;
+  --surface-3: #e6eaf2;
+  --line: #e6eaf2;
+  --line-strong: #d5dbe6;
+  --text-1: #0f172a;
+  --text-2: #475569;
+  --text-3: #6b7688;
+  --text-4: #9aa5b4;
+  --text-on-dark: #ffffff;
+
+  --gray: #6b7688;
+  --gray-2: #9aa5b4;
+  --gray-3: #c3cbd8;
+  --gray-4: #d5dbe6;
+  --gray-5: #e6eaf2;
+  --gray-6: #f1f4f9;
+  --ios-blue: #2b5ce6;
+  --ios-green: #0e9f6e;
+  --ios-orange: #d97706;
+  --ios-red: #e02424;
+  --ios-pink: #d6336c;
+  --ios-purple: #7048e8;
+  --ios-teal: #0c8599;
+  --ios-indigo: #4263eb;
+  --ios-yellow: #e8a100;
+
+  /* ---------- 「待雇主确认」状态紫（浅色口径：淡紫底 + 深紫字） ---------- */
+  --purple-soft: #f3edff;
+  --purple: #5b21b6;
+  /* ---------- 品牌大色块（整块品牌底色 + 白字的表面，如账单汇总卡） ----------
+     浅色下沿用它原本的 #5B84F0 → #1E49C4；深色下必须整体压暗：
+     浅蓝底配白字只有 2:1，既不锐利也读不清，压到 #3F63D6 后是 5.3:1 */
+  --brand-hero-from: #5b84f0;
+  --brand-hero-to: #1e49c4;
+  --shadow-hero: 0 8rpx 20rpx rgba(43, 92, 230, 0.22);
+
+  --shadow-card: 0 2rpx 8rpx rgba(15, 23, 42, 0.05);
+  --shadow-raise: 0 6rpx 20rpx rgba(15, 23, 42, 0.08);
+  --shadow-brand: 0 8rpx 20rpx rgba(43, 92, 230, 0.22);
+  --shadow-modal: 0 24rpx 64rpx rgba(15, 23, 42, 0.22);
+  --scrim: rgba(15, 23, 42, 0.45);
+  --scrim-soft: rgba(15, 23, 42, 0.32);
+
+  color: var(--text-1);
+}
+
+/* 深色：方案 A 的唯一暗色定义 */
+.theme-dark {
+  /* 主色在深底上提亮一档，保证「蓝色 = 可点击」依然成立 */
+  --brand: #6d8fff;
+  --brand-deep: #8fb0ff;       /* 深底上的蓝色文字（不用 #2B5CE6，只有 2.6:1） */
+  --brand-ink: #5b7ee0;        /* 按压态：比主色再深一点 */
+  --brand-light: #93b4ff;      /* 浅色端，仅装饰 */
+  --brand-soft: #1b2440;       /* 选中行底 / 图标底（深色下是同色深底，不是亮底） */
+  --brand-line: #2c3c6e;
+  --brand-on: #ffffff;         /* 品牌色填充之上的文字仍是白色 */
+
+  --accent: #ff8a4c;
+  --accent-fill: #ff8a4c;
+  --accent-deep: #ff9a5c;
+  --accent-soft: #2a1d14;
+  --money: #ff9a5c;
+  --money-soft: #2a1d14;
+
+  --success: #5fd39a;
+  --success-fill: #2ea36b;
+  --success-soft: #12291f;
+  --success-line: #1f4736;
+  --warn: #ffb374;
+  --warn-fill: #f59e0b;
+  --warn-soft: #2b1f12;
+  --warn-line: #4a3320;
+  --danger: #ff8a8a;
+  --danger-fill: #ef4444;
+  --danger-soft: #2c1618;
+  --danger-line: #4a2427;
+
+  --bg: #0f1116;
+  --bg-grad: linear-gradient(180deg, #0f1116 0%, #0f1116 100%);
+  --surface: #171a21;
+  --surface-2: #1f232c;
+  --surface-3: #262b36;
+  --line: #242935;
+  --line-strong: #333a48;
+  --text-1: #edf0f5;
+  --text-2: #b6becd;
+  --text-3: #8a93a3;
+  --text-4: #5f6878;
+  --text-on-dark: #ffffff;
+
+  --gray: #8a93a3;
+  --gray-2: #6b7484;
+  --gray-3: #4a5262;
+  --gray-4: #333a48;
+  --gray-5: #262b36;
+  --gray-6: #1f232c;
+  --ios-blue: #6d8fff;
+  --ios-green: #4ade80;
+  --ios-orange: #ffa94d;
+  --ios-red: #ff8080;
+  --ios-pink: #f783ac;
+  --ios-purple: #b197fc;
+  --ios-teal: #66d9e8;
+  --ios-indigo: #91a7ff;
+  --ios-yellow: #ffd43b;
+
+  /* ---------- 「待雇主确认」状态紫（深色：暗紫底 + 提亮文字，见 --purple-soft 注释） ---------- */
+  --purple-soft: #241a33;
+  --purple: #c4b5fd;
+  /* ---------- 品牌大色块（深色口径：压暗一档，保证白字仍有 5:1 以上） ---------- */
+  --brand-hero-from: #3f63d6;
+  --brand-hero-to: #2c4aab;
+  --shadow-hero: 0 8rpx 20rpx rgba(0, 0, 0, 0.45);
+
+  --shadow-card: 0 2rpx 10rpx rgba(0, 0, 0, 0.35);
+  --shadow-raise: 0 8rpx 24rpx rgba(0, 0, 0, 0.45);
+  --shadow-brand: 0 8rpx 22rpx rgba(109, 143, 255, 0.28);
+  --shadow-modal: 0 24rpx 64rpx rgba(0, 0, 0, 0.55);
+  --scrim: rgba(6, 8, 12, 0.6);
+  --scrim-soft: rgba(6, 8, 12, 0.45);
+
+  color: var(--text-1);
+}
+
+/* 页面根节点铺满整屏，避免内容不足一屏时露出 page 的浅色底（深色下会是一条白边）。
+   铺满整屏只给「页面根节点」，所以要求同时挂 .theme-root：
+   遮罩 / 底部弹层 / 固定底栏同样要挂 theme-dark / theme-light（否则拿不到深色令牌会回落成浅色），
+   但它们不能挂 .theme-root —— 否则会被 min-height:100vh 拉成整屏，把正文整页盖住
+   （发布页固定底栏踩过这个坑：底栏变成 887px 高，整页正文被它盖住）。 */
+.theme-light.theme-root,
+.theme-dark.theme-root {
+  min-height: 100vh;
+  background-color: var(--bg);
+  background-image: var(--bg-grad);
+}
+
+/* =====================================================================
+   2. 布局：容器与弹性工具类
+   ===================================================================== */
+.container {
+  padding: var(--page-pad);
+  box-sizing: border-box;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+}
+
+.row-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-1 {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 分组标题：列表之间的小标题，弱化但清晰 */
+.section-title {
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--text-1);
+  margin: var(--sp-2) 0 var(--sp-4);
+}
+
+/* 1 物理像素级分隔线 */
+.hairline {
+  height: 1rpx;
+  background: var(--line);
+}
+
+.divider {
+  height: 1rpx;
+  background: var(--line);
+  margin: var(--sp-5) 0;
+}
+
+/* =====================================================================
+   3. 卡片
+   ===================================================================== */
+.card {
+  position: relative;
+  background: var(--surface);
+  border-radius: var(--radius-l);
+  padding: var(--sp-8);
+  margin-bottom: var(--sp-6);
+  /* iOS 的卡片不用描边：白色卡片直接落在 #f1f4f9 分组灰上，边界自然清晰，
+     省掉描边也让界面更「轻」，符合 HIG「用留白分层」的原则 */
+  box-shadow: var(--shadow-card);
+  box-sizing: border-box;
+  /* 进场：轻微上浮 + 淡入；用 backwards 而不是 both，动画结束后交还控制权，
+     避免压住按压时的 transform */
+  animation-name: ds-fade-up;
+  animation-duration: var(--dur-slow);
+  animation-timing-function: var(--ease-out);
+  animation-fill-mode: backwards;
+  transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
+}
+
+/* 列表内卡片交错进场：前 8 张依次错开 30ms，更长的列表统一 0.24s 起步，不让用户白等 */
+.list > .card:nth-child(1) { animation-delay: 0s; }
+.list > .card:nth-child(2) { animation-delay: 0.03s; }
+.list > .card:nth-child(3) { animation-delay: 0.06s; }
+.list > .card:nth-child(4) { animation-delay: 0.09s; }
+.list > .card:nth-child(5) { animation-delay: 0.12s; }
+.list > .card:nth-child(6) { animation-delay: 0.15s; }
+.list > .card:nth-child(7) { animation-delay: 0.18s; }
+.list > .card:nth-child(8) { animation-delay: 0.21s; }
+.list > .card:nth-child(n + 9) { animation-delay: 0.24s; }
+
+/* 可按压卡片：卡片上写 hover-class="card-press" 即可获得统一按压反馈。
+   iOS 的按下反馈是「变灰」而不是「位移」，这里两者都给一点，手感更贴近系统 */
+.card-press {
+  transform: scale(0.98);
+  background-color: var(--gray-6);
+  box-shadow: none;
+}
+
+/* =====================================================================
+   4. 文字
+   ===================================================================== */
+.title {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  letter-spacing: 0.5rpx;
+  color: var(--text-1);
+}
+
+.sub {
+  font-size: var(--fs-sm);
+  color: var(--text-3);
+}
+
+.muted {
+  color: var(--text-3);
+}
+
+/* 金额：等宽数字，避免数字跳动导致排版抖动 */
+.price,
+.money {
+  color: var(--money);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.danger {
+  color: var(--danger);
+}
+
+.tips {
+  margin-top: var(--sp-4);
+  line-height: 1.6;
+}
+
+.ellipsis {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.placeholder {
+  color: var(--text-4);
+}
+
+/* =====================================================================
+   5. 按钮（圆角 16rpx · 五种变体 · 只有三种宽度规则）
+   ---------------------------------------------------------------------
+   宽度规则（写进设计规范，页面里不得再自定义）：
+     ① 页面主操作    → 全宽
+     ② 卡片内操作    → 等分列（放在 .btn-row 里自动等分）
+     ③ 列表行内操作  → 右对齐胶囊（.btn-sm，不拉伸）
+   ===================================================================== */
+.btn {
+  height: var(--touch);
+  min-height: var(--touch);
+  line-height: var(--touch);
+  border-radius: var(--radius-m);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  letter-spacing: 0.4rpx;
+  text-align: center;
+  margin: 0;
+  padding: 0 var(--sp-8);
+  box-sizing: border-box;
+  transition: transform var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out), opacity var(--dur-fast) var(--ease-out);
+}
+
+/* 去掉微信原生 button 的默认边框 */
+.btn::after {
+  border: none;
+}
+
+/* 主按钮：实心品牌蓝 + 白字。实心按钮不用渐变、不用投影，纯色本身就是最高优先级 */
+.btn-primary {
+  background-color: var(--brand);
+  color: var(--brand-on);
+}
+
+.btn-primary.button-hover,
+.btn-primary:active {
+  background-color: var(--brand-ink);
+}
+
+/* 禁用态：保留品牌色相、整体降不透明度，让用户看出「还差条件」而不是「按钮坏了」 */
+.btn-primary[disabled],
+.btn-disabled {
+  background-color: var(--brand);
+  color: var(--brand-on);
+  box-shadow: none;
+  opacity: 0.4;
+}
+
+/* 次要按钮：浅品牌底 + 蓝字，不描边（与主按钮形成明确的从属关系） */
+.btn-plain {
+  background: var(--brand-soft);
+  color: var(--brand-deep);
+}
+
+.btn-plain.button-hover,
+.btn-plain:active {
+  background: var(--brand-line);
+}
+
+/* 危险按钮：淡红底 + 深红字，不填实色，避免误点 */
+.btn-danger {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.btn-danger.button-hover,
+.btn-danger:active {
+  background: var(--danger-line);
+}
+
+/* 文字按钮：只有蓝字，用于「重置 / 取消 / 查看全部」这类最低优先级操作 */
+.btn-text {
+  height: 64rpx;
+  min-height: 64rpx;
+  line-height: 64rpx;
+  padding: 0 var(--sp-4);
+  background: transparent;
+  color: var(--brand-deep);
+  font-size: var(--fs-body);
+  font-weight: 500;
+}
+
+/* 紧凑按钮：卡片底部与列表行内使用，高度 72rpx；在 .btn-row 里会自动等分 */
+.btn-sm {
+  height: 72rpx;
+  min-height: 72rpx;
+  line-height: 72rpx;
+  font-size: var(--fs-body);
+  border-radius: var(--radius-m);
+  padding: 0 var(--sp-5);
+  box-shadow: none;
+}
+
+/* 微信原生 button 的按下类，统一全站手感：只缩一档，绝不改尺寸 */
+.button-hover {
+  transform: scale(0.98);
+  opacity: 0.92;
+}
+
+/* 卡片内操作区：子按钮等分列（两个各占 1/2），彻底消除「半宽孤儿按钮」 */
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: var(--sp-6);
+  gap: var(--sp-4);
+}
+
+.btn-row .btn {
+  margin: 0;
+}
+
+.btn-row > .btn {
+  flex: 1 1 0;
+  min-width: 0;
+  padding-left: var(--sp-4);
+  padding-right: var(--sp-4);
+}
+
+/* =====================================================================
+   6. CSS 图标集（纯几何绘制，颜色跟随 currentColor，无需图片资源）
+   ---------------------------------------------------------------------
+   用法：<view class="ico ico-search"></view>
+   说明：颜色继承父级 color，因此只需给操作格设置语义色，图标自动同色。
+   ===================================================================== */
+.ico {
+  position: relative;
+  display: inline-block;
+  flex: none;
+  width: 32rpx;
+  height: 32rpx;
+  color: inherit;
+}
+
+.ico::before,
+.ico::after {
+  content: '';
+  position: absolute;
+  box-sizing: border-box;
+}
+
+/* 放大镜 —— 「查看详情」 */
+.ico-search::before {
+  left: 2rpx;
+  top: 2rpx;
+  width: 19rpx;
+  height: 19rpx;
+  border: 3rpx solid currentColor;
+  border-radius: 50%;
+}
+
+.ico-search::after {
+  left: 21rpx;
+  top: 15rpx;
+  width: 3rpx;
+  height: 16rpx;
+  background: currentColor;
+  border-radius: 2rpx;
+  transform: rotate(45deg);
+}
+
+/* 双横线 —— 「排序 / 筛选」 */
+.ico-filter::before {
+  left: 2rpx;
+  top: 9rpx;
+  width: 28rpx;
+  height: 3rpx;
+  background: currentColor;
+  border-radius: 2rpx;
+}
+
+.ico-filter::after {
+  left: 8rpx;
+  top: 20rpx;
+  width: 16rpx;
+  height: 3rpx;
+  background: currentColor;
+  border-radius: 2rpx;
+}
+
+/* 禁止符 —— 「处罚 / 封禁」 */
+.ico-ban::before {
+  left: 2rpx;
+  top: 2rpx;
+  width: 28rpx;
+  height: 28rpx;
+  border: 3rpx solid currentColor;
+  border-radius: 50%;
+}
+
+.ico-ban::after {
+  left: 4rpx;
+  top: 15rpx;
+  width: 24rpx;
+  height: 3rpx;
+  background: currentColor;
+  border-radius: 2rpx;
+  transform: rotate(-45deg);
+}
+
+/* 垃圾桶 —— 「删除订单」 */
+.ico-trash::before {
+  left: 3rpx;
+  top: 5rpx;
+  width: 26rpx;
+  height: 3rpx;
+  background: currentColor;
+  border-radius: 2rpx;
+}
+
+.ico-trash::after {
+  left: 6rpx;
+  top: 10rpx;
+  width: 20rpx;
+  height: 17rpx;
+  border: 3rpx solid currentColor;
+  border-top: none;
+  border-radius: 0 0 6rpx 6rpx;
+}
+
+/* 锁 —— 「重置密码 / 密保」 */
+.ico-lock::before {
+  left: 9rpx;
+  top: 3rpx;
+  width: 14rpx;
+  height: 13rpx;
+  border: 3rpx solid currentColor;
+  border-bottom: none;
+  border-radius: 7rpx 7rpx 0 0;
+}
+
+.ico-lock::after {
+  left: 4rpx;
+  top: 15rpx;
+  width: 24rpx;
+  height: 15rpx;
+  background: currentColor;
+  border-radius: 4rpx;
+}
+
+/* 铅笔 —— 「编辑订单 / 修改资料」 */
+.ico-edit::before {
+  left: 13rpx;
+  top: 1rpx;
+  width: 7rpx;
+  height: 22rpx;
+  background: currentColor;
+  border-radius: 2rpx;
+  transform: rotate(-45deg);
+}
+
+.ico-edit::after {
+  left: 3rpx;
+  top: 21rpx;
+  width: 0;
+  height: 0;
+  border-top: 5rpx solid transparent;
+  border-bottom: 5rpx solid transparent;
+  border-right: 10rpx solid currentColor;
+}
+
+/* 圆减号 —— 「注销账号」 */
+.ico-minus::before {
+  left: 2rpx;
+  top: 2rpx;
+  width: 28rpx;
+  height: 28rpx;
+  border: 3rpx solid currentColor;
+  border-radius: 50%;
+}
+
+.ico-minus::after {
+  left: 7rpx;
+  top: 14rpx;
+  width: 18rpx;
+  height: 3rpx;
+  background: currentColor;
+  border-radius: 2rpx;
+}
+
+/* 圆形感叹号 —— 「提示 / 说明」 */
+.ico-info::before {
+  left: 2rpx;
+  top: 2rpx;
+  width: 28rpx;
+  height: 28rpx;
+  border: 3rpx solid currentColor;
+  border-radius: 50%;
+}
+
+.ico-info::after {
+  left: 14rpx;
+  top: 8rpx;
+  width: 3rpx;
+  height: 10rpx;
+  background: currentColor;
+  border-radius: 2rpx;
+  box-shadow: 0 12rpx 0 0 currentColor;
+}
+
+/* 眼睛 —— 「显示 / 隐藏密码」（扁圆轮廓 + 瞳孔，与主流 App 一致） */
+.ico-eye::before {
+  left: 1rpx;
+  top: 6rpx;
+  width: 30rpx;
+  height: 20rpx;
+  border: 3rpx solid currentColor;
+  border-radius: 50%;
+}
+
+.ico-eye::after {
+  left: 12rpx;
+  top: 12rpx;
+  width: 8rpx;
+  height: 8rpx;
+  background: currentColor;
+  border-radius: 50%;
+}
+
+/* 「隐藏中」状态：眼睛上划过一道斜线（斜线由外层容器绘制，见 styles/auth.wxss） */
+.ico-eye-off::before {
+  opacity: 0.55;
+}
+
+.ico-eye-off::after {
+  opacity: 0.55;
+}
+
+/* 叉号 —— 「清空输入框」 */
+.ico-close::before,
+.ico-close::after {
+  left: 6rpx;
+  top: 14rpx;
+  width: 20rpx;
+  height: 3rpx;
+  background: currentColor;
+  border-radius: 2rpx;
+}
+
+.ico-close::before {
+  transform: rotate(45deg);
+}
+
+.ico-close::after {
+  transform: rotate(-45deg);
+}
+
+/* 加号 —— 「上传照片」 */
+.ico-plus::before,
+.ico-plus::after {
+  background: currentColor;
+  border-radius: 2rpx;
+}
+
+.ico-plus::before {
+  left: 14rpx;
+  top: 5rpx;
+  width: 4rpx;
+  height: 22rpx;
+}
+
+.ico-plus::after {
+  left: 5rpx;
+  top: 14rpx;
+  width: 22rpx;
+  height: 4rpx;
+}
+
+/* 时钟 —— 「限时 / 倒计时」 */
+.ico-clock::before {
+  left: 2rpx;
+  top: 2rpx;
+  width: 28rpx;
+  height: 28rpx;
+  border: 3rpx solid currentColor;
+  border-radius: 50%;
+}
+
+/* 指针画成一个 12 点 + 3 点的直角折角，比单根指针更像时钟 */
+.ico-clock::after {
+  left: 16rpx;
+  top: 8rpx;
+  width: 7rpx;
+  height: 8rpx;
+  border-left: 3rpx solid currentColor;
+  border-bottom: 3rpx solid currentColor;
+  border-radius: 0 0 0 3rpx;
+}
+
+/* 纸箱 —— 「取快递 / 代拿包裹」 */
+.ico-box::before {
+  left: 3rpx;
+  top: 8rpx;
+  width: 26rpx;
+  height: 21rpx;
+  border: 3rpx solid currentColor;
+  border-radius: 3rpx;
+}
+
+.ico-box::after {
+  left: 3rpx;
+  top: 13rpx;
+  width: 26rpx;
+  height: 3rpx;
+  background: currentColor;
+}
+
+/* 饭碗 —— 「食堂带饭」 */
+.ico-bowl::before {
+  left: 2rpx;
+  top: 4rpx;
+  width: 28rpx;
+  height: 3rpx;
+  background: currentColor;
+  border-radius: 2rpx;
+}
+
+.ico-bowl::after {
+  left: 4rpx;
+  top: 11rpx;
+  width: 24rpx;
+  height: 14rpx;
+  border: 3rpx solid currentColor;
+  border-top: none;
+  border-radius: 0 0 12rpx 12rpx;
+}
+
+/* 文稿 —— 「打印资料 / 文件」 */
+.ico-doc::before {
+  left: 6rpx;
+  top: 2rpx;
+  width: 20rpx;
+  height: 28rpx;
+  border: 3rpx solid currentColor;
+  border-radius: 4rpx;
+}
+
+.ico-doc::after {
+  left: 11rpx;
+  top: 11rpx;
+  width: 10rpx;
+  height: 3rpx;
+  background: currentColor;
+  border-radius: 2rpx;
+  box-shadow: 0 -6rpx 0 0 currentColor, 0 6rpx 0 0 currentColor;
+}
+
+/* 购物袋 —— 「超市代买」 */
+.ico-bag::before {
+  left: 11rpx;
+  top: 3rpx;
+  width: 10rpx;
+  height: 11rpx;
+  border: 3rpx solid currentColor;
+  border-bottom: none;
+  border-radius: 6rpx 6rpx 0 0;
+}
+
+.ico-bag::after {
+  left: 4rpx;
+  top: 14rpx;
+  width: 24rpx;
+  height: 16rpx;
+  border: 3rpx solid currentColor;
+  border-radius: 4rpx;
+}
+
+/* =====================================================================
+   7. 标签（背景只包裹文字，避免在 flex 行里被撑大）
+   ===================================================================== */
+.tag {
+  display: inline-block;
+  /* flex 子项会被「块化」并按 flex 规则解析尺寸，容易导致背景框被撑大；
+     这里用 flex:none + width:fit-content 锁定「只包裹文字」的尺寸 */
+  flex: none;
+  align-self: center;
+  width: fit-content;
+  max-width: 100%;
+  box-sizing: border-box;
+  white-space: nowrap;
+  padding: 2rpx 12rpx;
+  border-radius: var(--radius-s);
+  font-size: var(--fs-cap);
+  line-height: 1.6;
+  font-weight: 500;
+  /* 徽标一律「同色系淡底 + 深色字」，一律不描边；
+     圆角从全胶囊收敛到 8rpx，观感更像正式产品的状态标而不是聊天标签 */
+  background: var(--brand-soft);
+  color: var(--brand-deep);
+}
+
+.tag-success {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.tag-warn {
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+
+.tag-danger {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.tag-gray {
+  background: var(--surface-3);
+  color: var(--text-3);
+}
+
+/* 待雇主确认：紫色，与「进行中」的橙色明确区分（与牌堆卡、卡片左侧色条同一套色值）。
+   深色下不能继续用 #F3EDFF —— 那是一块发光的淡紫，必须换成暗紫底 + 提亮紫字 */
+.tag-purple {
+  background: var(--purple-soft);
+  color: var(--purple);
+}
+
+/* 管理员标识：对所有用户可见的红色身份标签（管理员不再显示「已认证」） */
+.tag-admin {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+/* 标签组：右上角并排多个标签 */
+.tag-group {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-left: var(--sp-4);
+}
+
+.tag-group .tag {
+  margin-left: var(--sp-3);
+}
+
+.tag-group .tag:first-child {
+  margin-left: 0;
+}
+
+/* 可点选标签（筛选 / 标签选择器） */
+.tag-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+}
+
+.tag-chip {
+  display: inline-block;
+  flex: none;
+  padding: 8rpx 20rpx;
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-sm);
+  background: var(--surface-2);
+  color: var(--text-2);
+  transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.tag-chip-active {
+  background: var(--brand);
+  color: var(--brand-on);
+}
+
+/* =====================================================================
+   8. 人员信息行：头像 + 昵称 + 账号 ID + 学号 + 认证标识
+   ===================================================================== */
+.person-row {
+  display: flex;
+  align-items: center;
+  margin-top: var(--sp-5);
+}
+
+.person-avatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  background: var(--brand-soft);
+  flex-shrink: 0;
+}
+
+.person-avatar-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--brand-deep);
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+
+.person-info {
+  margin-left: var(--sp-5);
+  min-width: 0;
+}
+
+.person-name {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  max-width: 340rpx;
+}
+
+.person-row .tag {
+  margin-left: var(--sp-3);
+}
+
+/* 角色小标签：雇主 / 跑腿员 */
+.person-role {
+  font-size: var(--fs-cap);
+  color: var(--brand-on);
+  background: var(--brand);
+  border-radius: var(--radius-s);
+  padding: 2rpx 12rpx;
+  margin-right: var(--sp-3);
+  flex-shrink: 0;
+}
+
+/* =====================================================================
+   9. 任务信息行：送达地址 / 限时 / 跑腿费
+   ===================================================================== */
+.info-line {
+  display: flex;
+  margin-top: var(--sp-3);
+  font-size: var(--fs-body);
+  line-height: 1.6;
+}
+
+.info-k {
+  color: var(--text-3);
+  width: 140rpx;
+  flex-shrink: 0;
+}
+
+.info-v {
+  flex: 1;
+  word-break: break-all;
+}
+
+/* =====================================================================
+   10. 表单
+   ===================================================================== */
+.form-item {
+  display: flex;
+  align-items: center;
+  min-height: 100rpx;
+  border-bottom: 1rpx solid var(--line);
+  padding: var(--sp-3) 0;
+  box-sizing: border-box;
+}
+
+/* iOS 分组列表：最后一行不画分隔线，避免和卡片下边缘叠成双线 */
+.form-item:last-child {
+  border-bottom: none;
+}
+
+.form-item-area {
+  align-items: flex-start;
+  padding: var(--sp-5) 0;
+}
+
+.form-label {
+  width: 180rpx;
+  color: var(--text-2);
+  flex-shrink: 0;
+  font-size: var(--fs-md);
+}
+
+.form-input {
+  flex: 1;
+  font-size: var(--fs-md);
+  color: var(--text-1);
+  min-width: 0;
+}
+
+.form-textarea {
+  flex: 1;
+  width: 100%;
+  min-height: 160rpx;
+  font-size: var(--fs-md);
+  line-height: 1.6;
+}
+
+.form-tip {
+  font-size: var(--fs-sm);
+  color: var(--text-3);
+  padding: var(--sp-2) 0 0 180rpx;
+  line-height: 1.6;
+}
+
+/* =====================================================================
+   11. 图片网格 / 上传
+   ===================================================================== */
+.img-grid {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.img-thumb {
+  width: 200rpx;
+  height: 200rpx;
+  border-radius: var(--radius-s);
+  margin: 0 var(--sp-4) var(--sp-4) 0;
+  background: var(--surface-3);
+}
+
+.upload-box {
+  width: 200rpx;
+  height: 200rpx;
+  border-radius: var(--radius-s);
+  border: 2rpx dashed var(--line-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-3);
+  font-size: var(--fs-sm);
+  background: var(--surface-2);
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease;
+}
+
+.upload-box:active {
+  background: var(--brand-soft);
+  border-color: var(--brand-line);
+}
+
+.img-wrap {
+  position: relative;
+}
+
+.img-del {
+  position: absolute;
+  top: -12rpx;
+  right: 4rpx;
+  width: 40rpx;
+  height: 40rpx;
+  line-height: 36rpx;
+  text-align: center;
+  border-radius: 50%;
+  background: var(--scrim);
+  color: var(--text-on-dark);
+  font-size: var(--fs-md);
+}
+
+/* 图片缩略图 + 右上角删除按钮 */
+.img-thumb-wrap {
+  position: relative;
+  display: inline-block;
+  margin: 0 var(--sp-4) var(--sp-4) 0;
+}
+
+.img-thumb-wrap .img-thumb,
+.img-thumb-wrap .avatar-img {
+  margin: 0;
+}
+
+.thumb-del {
+  position: absolute;
+  top: -14rpx;
+  right: -14rpx;
+  width: 44rpx;
+  height: 44rpx;
+  line-height: 40rpx;
+  text-align: center;
+  border-radius: 50%;
+  background: var(--scrim);
+  color: var(--text-on-dark);
+  font-size: var(--fs-body);
+}
+
+/* =====================================================================
+   12. 空状态 / 加载
+   ===================================================================== */
+.empty {
+  padding: 96rpx 0;
+  color: var(--text-3);
+  font-size: var(--fs-body);
+  text-align: center;
+}
+
+/* 空状态的两行文案：主文案 + 一句可执行的引导 */
+.empty-title {
+  display: block;
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.empty-sub {
+  display: block;
+  margin-top: var(--sp-3);
+  padding: 0 var(--sp-8);
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+  color: var(--text-4);
+}
+
+/* 柔和圆形底图 + 文案，避免大片空白让人以为「页面坏了」。
+   iOS 的空状态不用彩色插画：一层淡灰圆 + 三条灰横线，
+   和系统「无内容」占位图的语言保持一致。
+   注意 background 的书写顺序是「上层在前」，所以底色必须放在最后。 */
+.empty::before {
+  content: '';
+  display: block;
+  width: 144rpx;
+  height: 144rpx;
+  margin: 0 auto var(--sp-5);
+  border-radius: 50%;
+  /* 注意 background 的书写顺序是「上层在前」，所以圆形底必须放在最后。
+     底色用「品牌淡蓝 → 中性灰」的竖向渐变，比纯灰多一点品牌感，
+     但仍保持「系统级空状态」的克制，不会抢走正文注意力。
+     这里只用 linear-gradient（radial-gradient 在部分低版本 WebView 上不被支持，
+     一旦声明失效会连底色一起丢掉）。 */
+  background-image:
+    linear-gradient(var(--gray-4), var(--gray-4)),
+    linear-gradient(var(--gray-4), var(--gray-4)),
+    linear-gradient(var(--gray-4), var(--gray-4)),
+    linear-gradient(180deg, var(--brand-soft), var(--surface-2));
+  background-size: 44rpx 8rpx, 44rpx 8rpx, 26rpx 8rpx, 100% 100%;
+  background-position: 50% 38%, 50% 52%, 50% 67%, center;
+  background-repeat: no-repeat;
+  animation: ds-fade-in var(--dur-slow) var(--ease-out) both;
+}
+
+.loading-more {
+  text-align: center;
+  padding: var(--sp-5) 0 var(--sp-10);
+}
+
+/* 骨架屏：列表首屏加载占位（避免白屏，且预留空间不产生布局跳动） */
+.skeleton {
+  background-image: linear-gradient(90deg, var(--gray-5) 25%, var(--gray-6) 37%, var(--gray-5) 63%);
+  background-size: 400% 100%;
+  border-radius: var(--radius-s);
+  animation: ds-shimmer 1.4s ease-in-out infinite;
+}
+
+.skeleton-line {
+  height: 28rpx;
+  margin-bottom: var(--sp-4);
+}
+
+.skeleton-line:last-child {
+  margin-bottom: 0;
+  width: 60%;
+}
+
+.skeleton-head {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--sp-5);
+}
+
+.skeleton-avatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  margin-right: var(--sp-5);
+}
+
+.skeleton-head-line {
+  flex: 1;
+  height: 30rpx;
+}
+
+/* =====================================================================
+   13. 弹窗与遮罩
+   ===================================================================== */
+.mask {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--scrim-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  animation: ds-fade-in var(--dur-base) var(--ease-out) both;
+}
+
+.modal {
+  width: 620rpx;
+  max-height: 82vh;
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  padding: var(--sp-10) var(--sp-8) var(--sp-5);
+  box-sizing: border-box;
+  /* 用大范围柔和投影拉开层次，而不是一味加深遮罩 */
+  box-shadow: var(--shadow-modal);
+  overflow: hidden;
+  animation: ds-pop-in 0.26s var(--ease-out) both;
+}
+
+.modal-title {
+  font-size: var(--fs-title);
+  font-weight: 700;
+  text-align: center;
+  color: var(--text-1);
+  letter-spacing: 0.5rpx;
+}
+
+.modal-body {
+  font-size: var(--fs-md);
+  color: var(--text-2);
+  padding: var(--sp-6) 0;
+  line-height: 1.6;
+}
+
+.modal-input {
+  height: var(--touch);
+  background: var(--surface-2);
+  border-radius: var(--radius-s);
+  padding: 0 var(--sp-6);
+  font-size: var(--fs-md);
+  box-sizing: border-box;
+}
+
+.modal-textarea {
+  width: 100%;
+  height: 180rpx;
+  background: var(--surface-2);
+  border-radius: var(--radius-s);
+  padding: var(--sp-5);
+  box-sizing: border-box;
+  font-size: var(--fs-md);
+}
+
+.modal-foot {
+  display: flex;
+  border-top: 1rpx solid var(--line);
+  margin-top: var(--sp-5);
+}
+
+.modal-btn {
+  flex: 1;
+  text-align: center;
+  height: 92rpx;
+  line-height: 92rpx;
+  font-size: var(--fs-title);
+  transition: background-color var(--dur-fast) var(--ease-out), opacity var(--dur-fast) var(--ease-out);
+}
+
+.modal-btn:active {
+  background-color: rgba(15, 23, 42, 0.06);
+  opacity: 0.9;
+}
+
+.modal-btn-cancel {
+  color: var(--text-2);
+  border-right: 1rpx solid var(--line);
+}
+
+.modal-btn-ok {
+  color: var(--brand-deep);
+  font-weight: 600;
+}
+
+.modal-btn-disabled {
+  color: var(--text-4);
+}
+
+/* =====================================================================
+   14. 底部安全区
+   ===================================================================== */
+.safe-bottom {
+  height: calc(var(--sp-8) + env(safe-area-inset-bottom));
+}
+
+/* =====================================================================
+   15. 动效关键帧
+   ===================================================================== */
+@keyframes ds-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ds-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ds-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(16rpx) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes ds-shimmer {
+  from {
+    background-position: 120% 0;
+  }
+  to {
+    background-position: -20% 0;
+  }
+}
+
+@keyframes ds-breath {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.62;
+  }
+}
+
+/* 限时任务倒计时：等宽数字 + 轻微呼吸，让「时间在走」有存在感 */
+.countdown {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 1rpx;
+  animation: ds-breath 1.8s ease-in-out infinite;
+}
+
+/* =====================================================================
+   16. 无障碍：尊重系统「减弱动态效果」
+   ---------------------------------------------------------------------
+   Apple HIG 要求：用户开启「减弱动态效果」时，用交叉淡入替代位移 / 弹性动画。
+   这里把全站动画压到接近 0 且只播一帧，避免前庭不适；
+   动画只改 opacity / transform，不参与排版，因此不会影响任何静态布局。
+   ===================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  page,
+  view,
+  text,
+  image,
+  button,
+  input,
+  textarea,
+  scroll-view,
+  navigator {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* =====================================================================
+   17. 图标补充集（消息中心 / 个人中心）
+   ---------------------------------------------------------------------
+   消息中心的行图标由消息类型动态拼出（class="ico ico-{{iconName}}"），
+   类型映射为：1 系统 = bell、2 管理员 = shield、3 任务 = box、4 雇主 = user。
+   其中 box 已在第 6 节定义，这里补齐其余三个；
+   若漏定义，列表左侧会渲染成一个空的彩色方块（无字形），属于必须补的缺口。
+   全部沿用第 6 节约定：纯几何绘制、颜色继承 currentColor、尺寸 32rpx。
+   ===================================================================== */
+
+/* 铃铛 —— 「系统消息」：圆顶 + 底沿 + 圆形铃舌 */
+.ico-bell::before {
+  left: 5rpx;
+  top: 2rpx;
+  width: 22rpx;
+  height: 22rpx;
+  border: 3rpx solid currentColor;
+  border-radius: 11rpx 11rpx 4rpx 4rpx;
+}
+
+.ico-bell::after {
+  left: 2rpx;
+  top: 24rpx;
+  width: 28rpx;
+  height: 3rpx;
+  background: currentColor;
+  border-radius: 2rpx;
+  box-shadow: 0 5rpx 0 -1rpx currentColor;
+}
+
+/* 盾牌 —— 「管理员消息」：盾形轮廓 + 内部对勾，语义直指「官方 / 权威」 */
+.ico-shield::before {
+  left: 4rpx;
+  top: 2rpx;
+  width: 24rpx;
+  height: 27rpx;
+  border: 3rpx solid currentColor;
+  border-radius: 5rpx 5rpx 50% 50% / 5rpx 5rpx 62% 62%;
+}
+
+.ico-shield::after {
+  left: 11rpx;
+  top: 9rpx;
+  width: 7rpx;
+  height: 12rpx;
+  border-right: 3rpx solid currentColor;
+  border-bottom: 3rpx solid currentColor;
+  transform: rotate(45deg);
+}
+
+/* 人像 —— 「雇主消息」：圆头 + 半圆肩线 */
+.ico-user::before {
+  left: 11rpx;
+  top: 3rpx;
+  width: 10rpx;
+  height: 10rpx;
+  border: 3rpx solid currentColor;
+  border-radius: 50%;
+}
+
+.ico-user::after {
+  left: 5rpx;
+  top: 19rpx;
+  width: 22rpx;
+  height: 11rpx;
+  border: 3rpx solid currentColor;
+  border-bottom: none;
+  border-radius: 11rpx 11rpx 0 0;
+}

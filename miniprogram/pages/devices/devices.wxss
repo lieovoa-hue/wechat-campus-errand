@@ -1,0 +1,37 @@
+/**
+ * 我的设备样式（v6）
+ * ---------------------------------------------------------------------
+ * 当前设备用品牌描边 + 淡底突出，历史设备退成中性；
+ * 设计依据：docs/page-design-v1.md 第 19 页
+ */
+
+.device-row {
+  display: flex;
+  align-items: center;
+  padding: var(--sp-5) 0;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.device-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+/* 当前设备：品牌淡底 + 圆角，一眼区分「这台是我在用的」 */
+.device-row-current {
+  margin: var(--sp-3) 0;
+  padding: var(--sp-5);
+  background: var(--brand-soft);
+  border: 2rpx solid var(--brand-line);
+  border-radius: var(--radius-m);
+}
+
+.device-row-current:last-child {
+  padding-bottom: var(--sp-5);
+}
+
+/* 设备行内的按钮不参与拉伸，保持固定宽度，符合「列表行内操作」宽度规则 */
+.device-row .btn {
+  flex: none;
+  margin-left: var(--sp-4);
+}

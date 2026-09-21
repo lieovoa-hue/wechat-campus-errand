@@ -1,0 +1,182 @@
+<!--
+  注册页（只负责注册）
+  · 账号ID 自选：前缀固定 X，后 1~4 位数字由用户填，也可一键随机生成
+  · 密码：8-20 位且同时包含字母和数字
+  · 图形验证码：本地生成，零成本（短信通道已下线）
+  · 手机号 / 昵称 / 邀请码：全部选填，填了才会做对应校验
+  · 必须勾选同意《用户服务协议》与《隐私政策》才能提交
+-->
+<view class="auth-page {{themeClass}} theme-root">
+  <!-- 全局通知条：管理员发布的公告，可关闭（本次会话内不再出现） -->
+  <notice-bar />
+
+  <!-- ============ 顶部品牌 ============ -->
+  <view class="auth-hero">
+    <image class="auth-logo" src="/images/logo.png" mode="aspectFill" />
+    <view class="auth-title">创建账号</view>
+    <view class="auth-subtitle">30 秒完成注册，认证后即可发布与接单</view>
+  </view>
+
+  <!-- ============ 注册表单 ============ -->
+  <view class="auth-card">
+    <view class="auth-card-title">账号信息</view>
+
+    <!-- 账号ID：前缀固定 X，后缀 1~4 位数字 -->
+    <view class="auth-field">
+      <view class="auth-label">账号ID</view>
+      <input
+        class="auth-input"
+        value="{{accountNo}}"
+        data-field="accountNo"
+        bindinput="onInput"
+        bindblur="checkAccountNo"
+        placeholder="{{accountNoPlaceholder}}"
+        placeholder-class="auth-placeholder"
+      />
+      <view class="auth-inline-btn" bindtap="randomAccountNo">随机生成</view>
+    </view>
+    <view class="auth-tip">前缀 {{accountPrefix}} 固定，后 1~4 位数字可自选；这就是你的登录账号，请记牢。</view>
+    <view class="auth-tip {{accountTipType === 'ok' ? 'auth-tip-success' : 'auth-tip-danger'}}" wx:if="{{accountTip}}">{{accountTip}}</view>
+
+    <view class="auth-field">
+      <view class="auth-label">密码</view>
+      <input
+        class="auth-input"
+        password="{{!showPassword}}"
+        value="{{regPassword}}"
+        data-field="regPassword"
+        bindinput="onInput"
+        placeholder="8-20位，含字母和数字"
+        placeholder-class="auth-placeholder"
+      />
+      <view class="auth-eye" bindtap="togglePassword">{{showPassword ? '隐藏' : '显示'}}</view>
+    </view>
+
+    <view class="auth-field">
+      <view class="auth-label">确认密码</view>
+      <input
+        class="auth-input"
+        password="{{!showPassword}}"
+        value="{{regPassword2}}"
+        data-field="regPassword2"
+        bindinput="onInput"
+        placeholder="请再次输入密码"
+        placeholder-class="auth-placeholder"
+      />
+    </view>
+
+    <!-- 图形验证码（替代短信验证码，零成本） -->
+    <view class="auth-field">
+      <view class="auth-label">验证码</view>
+      <view class="auth-captcha-row">
+        <input
+          class="auth-input auth-captcha-input"
+          value="{{captchaCode}}"
+          data-field="captchaCode"
+          bindinput="onInput"
+          placeholder="填写计算结果"
+          placeholder-class="auth-placeholder"
+        />
+        <image
+          class="auth-captcha-img"
+          src="{{captcha.image}}"
+          mode="aspectFit"
+          bindtap="refreshCaptcha"
+        ></image>
+      </view>
+    </view>
+    <view class="auth-tip">看不清？点图片可换一张（5 分钟内有效）</view>
+
+    <!-- 更多资料：手机号 / 昵称 / 邀请码 默认收起，注册首屏只留必填项，
+         减少「一进来就要填好多」的心理负担；收起只是隐藏节点，值都存在 data 里，
+         所以展开填好再收起不会丢，重新展开内容仍在。 -->
+    <view class="auth-more" hover-class="auth-more-hover" hover-stay-time="60" bindtap="toggleMore">
+      <text class="auth-more-txt">更多</text>
+      <view class="auth-more-arrow {{showMore ? 'auth-more-arrow-up' : ''}}"></view>
+      <!-- 收起且已正确填写时给个回执，避免用户以为填的内容被丢掉了 -->
+      <text class="auth-more-badge" wx:if="{{!showMore && moreFilledCount > 0}}">已填 {{moreFilledCount}} 项</text>
+    </view>
+
+    <block wx:if="{{showMore}}">
+      <view class="auth-field">
+        <view class="auth-label">手机号</view>
+        <input
+          class="auth-input"
+          type="number"
+          maxlength="11"
+          value="{{phone}}"
+          data-field="phone"
+          bindinput="onInput"
+          placeholder="选填，便于管理员联系"
+          placeholder-class="auth-placeholder"
+        />
+      </view>
+
+      <view class="auth-field">
+        <view class="auth-label">昵称</view>
+        <input
+          class="auth-input"
+          maxlength="30"
+          value="{{nickname}}"
+          data-field="nickname"
+          bindinput="onInput"
+          placeholder="选填，不填自动分配"
+          placeholder-class="auth-placeholder"
+        />
+      </view>
+
+      <view class="auth-field">
+        <view class="auth-label">邀请码</view>
+        <input
+          class="auth-input"
+          maxlength="20"
+          value="{{inviteCode}}"
+          data-field="inviteCode"
+          bindinput="onInput"
+          placeholder="选填，填写后送 1 次免费代拿"
+          placeholder-class="auth-placeholder"
+        />
+      </view>
+      <view class="auth-tip">填写有效邀请码，注册后 7 天内可享受 1 次快递免费代拿（仅限一件包裹）。</view>
+    </block>
+
+    <!-- 协议勾选：注册与登录都必须同意（登录页同款交互） -->
+    <view class="auth-agree" bindtap="toggleAgree">
+      <view class="auth-checkbox {{agreed ? 'auth-checkbox-on' : ''}}">
+        <text wx:if="{{agreed}}">✓</text>
+      </view>
+      <view class="auth-agree-text">
+        我已阅读并同意<text class="auth-agree-link" catchtap="openAgreement" data-type="service">《用户服务协议》</text>与<text class="auth-agree-link" catchtap="openAgreement" data-type="privacy">《隐私政策》</text>
+      </view>
+    </view>
+
+    <view class="auth-submit {{submitting ? 'auth-submit-disabled' : ''}}" bindtap="doRegister">
+      {{submitting ? '注册中…' : '注册并登录'}}
+    </view>
+
+    <!-- 底部次要路径：回登录页 -->
+    <view class="auth-links" style="justify-content:center">
+      <view class="auth-link" bindtap="goLogin">已有账号？去登录</view>
+    </view>
+  </view>
+
+  <!--
+    协议阅读弹窗
+    · 弹窗必须放在 .mask 内部：.mask 是 fixed + flex 居中的容器，
+      弹窗作为兄弟节点时会跟着页面普通流排版，导致位置漂移、底部按钮被屏幕裁掉。
+    · catchtap="noop"：点弹窗内容不冒泡到遮罩，避免误触关闭。
+  -->
+  <view class="mask" wx:if="{{showAgreement}}" bindtap="closeAgreement">
+    <view class="modal" catchtap="noop">
+      <view class="modal-title">{{agreementTitle}}</view>
+      <scroll-view class="auth-doc-body" scroll-y enhanced show-scrollbar>
+        <view class="auth-doc-p" wx:for="{{agreementParagraphs}}" wx:key="index">{{item}}</view>
+      </scroll-view>
+      <view class="modal-foot">
+        <view class="modal-btn modal-btn-ok" bindtap="closeAgreement">我已阅读</view>
+      </view>
+    </view>
+  </view>
+
+  <page-footer />
+</view>

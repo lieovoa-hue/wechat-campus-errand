@@ -1,0 +1,19 @@
+<!-- =====================================================================
+     统一确认弹窗（自绘）
+     结构：遮罩 → 弹窗（标题 / 可滚动正文 / 取消 + 确定）
+     说明：遮罩点击 = 取消；弹窗内容区 catchtap 拦冒泡，点正文不会误关。
+     ===================================================================== -->
+<view class="cd-mask" wx:if="{{visible}}" catchtap="onCancel" catchtouchmove="noop">
+  <view class="cd-box" catchtap="noop">
+    <view class="cd-title" wx:if="{{title}}">{{title}}</view>
+
+    <scroll-view class="cd-body" scroll-y enhanced show-scrollbar="{{false}}">
+      <text class="cd-content">{{content}}</text>
+    </scroll-view>
+
+    <view class="cd-actions">
+      <view class="cd-btn cd-btn-cancel" wx:if="{{showCancel}}" hover-class="cd-btn-press" hover-stay-time="60" catchtap="onCancel">{{cancelText}}</view>
+      <view class="cd-btn cd-btn-ok {{danger ? 'cd-btn-danger' : ''}}" hover-class="cd-btn-press" hover-stay-time="60" catchtap="onConfirm">{{confirmText}}</view>
+    </view>
+  </view>
+</view>

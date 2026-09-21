@@ -1,0 +1,103 @@
+/* =====================================================================
+   公告组件样式
+   · 通知条：品牌底 + 单行文本 + 关闭按钮
+   · 跑马灯：左侧标签 + 右侧滚动文本（线性动画，滚完由 JS 切下一条）
+   颜色全部取自主题令牌，深色模式自动跟随。
+   ===================================================================== */
+
+/* ------------------------------ 通知条 ------------------------------ */
+.nb-bar {
+  display: flex;
+  align-items: center;
+  margin: 16rpx 24rpx 0;
+  padding: 18rpx 20rpx;
+  border-radius: var(--radius-m);
+  background: var(--brand-soft);
+  border: 1rpx solid var(--brand-line);
+}
+
+.nb-bar-badge {
+  flex: none;
+  margin-right: 14rpx;
+  padding: 2rpx 12rpx;
+  border-radius: var(--radius-pill);
+  background: var(--brand);
+  color: var(--brand-on);
+  font-size: 20rpx;
+  line-height: 32rpx;
+}
+
+.nb-bar-text {
+  flex: 1;
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  color: var(--brand-deep);
+  word-break: break-all;
+}
+
+.nb-bar-count {
+  flex: none;
+  margin-left: 12rpx;
+  font-size: 20rpx;
+  color: var(--brand-deep);
+  opacity: .7;
+}
+
+.nb-bar-close {
+  flex: none;
+  width: 48rpx;
+  height: 48rpx;
+  margin-left: 6rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nb-bar-close-ico {
+  opacity: .55;
+}
+
+/* ------------------------------ 跑马灯 ------------------------------ */
+.nb-marquee {
+  display: flex;
+  align-items: center;
+  height: 60rpx;
+  margin-top: 16rpx;
+  padding: 0 18rpx;
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.nb-marquee-label {
+  flex: none;
+  margin-right: 16rpx;
+  padding: 2rpx 12rpx;
+  border-radius: var(--radius-pill);
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+  font-size: 20rpx;
+  line-height: 32rpx;
+}
+
+.nb-marquee-track {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.nb-marquee-text {
+  display: inline-block;
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+  white-space: nowrap;
+  animation-name: nb-marquee-scroll;
+  animation-timing-function: linear;
+  animation-iteration-count: 1;
+  animation-fill-mode: forwards;
+}
+
+@keyframes nb-marquee-scroll {
+  from { transform: translateX(100%); }
+  to { transform: translateX(-100%); }
+}

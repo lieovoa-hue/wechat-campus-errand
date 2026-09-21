@@ -1,0 +1,271 @@
+<!--
+  首页 · 任务大厅（v6 · 「下单入口页」）
+  改版依据：docs/ui-style-v1.png 第 08 节「首页改版方向」
+    ① 顶部不放超大标题（导航栏已写「校园跑腿」），只留一行身份提示；
+    ② 搜索独占一行，右侧只留一个「筛选」入口；排序与筛选收进底部 Sheet；
+    ③ 金刚区：取快递 / 食堂带饭 / 打印资料 / 超市代买 + 自定义发布，点击直达发布页；
+    ④ 未完成任务置顶为深色堆叠卡：多单叠放，上滑切换，带实时倒计时（待接单 / 进行中 / 待确认 都收在这里）。
+  主题：页面根节点挂 themeClass（浅色 theme-light / 深色 theme-dark），颜色全部走 app.wxss 变量，
+         顶部右上的滑动开关负责手动切换，默认跟随系统，详见 utils/theme.js。
+  说明：任务卡仍完整展示双方身份（头像 / 昵称 / 账号ID / 学号 / 认证标识），
+        这是产品硬要求「每条任务都要标注学号与认证标志」，因此未按 08 节的精简版处理。
+  刷新：首页不用原生下拉刷新（会和牌堆手势打架），改成「固定头部 + 主体 scroll-view 下拉刷新」，
+        结构与交互说明见下方 ② 号注释。
+-->
+<view class="hall {{themeClass}} theme-root">
+  <!-- 统一确认弹窗（自绘，深色自适应）：由 utils/dialog.js 通过 selectComponent 调用 -->
+  <confirm-dialog id="confirmDialog" />
+
+  <!-- 顶部固定区 · 之一：品牌行 + 搜索/筛选，不随列表滚动（列表滑到哪儿都能直接搜索） -->
+  <view class="hall-head">
+    <!-- ① 顶部一行：左侧品牌 + 身份提示，右侧主题开关
+          开关位置就是用户指定的「筛选入口上方的留白处」：不占搜索行、不新增一行高度。
+          交互：点一下＝在浅色 / 深色之间切换（手动锁定）；长按＝恢复「跟随系统」。
+          实现见 utils/theme.js —— 页面只挂类，颜色全在 app.wxss 的变量层。 -->
+    <view class="hall-top">
+      <view class="hall-hello">
+        <text class="hall-brand">同学,先送我的</text>
+        <text class="hall-tip">{{heroTip}}</text>
+      </view>
+      <view class="theme-toggle {{isDark ? 'theme-toggle-on' : ''}}" hover-class="theme-toggle-hover"
+            hover-stay-time="60" bindtap="onToggleTheme" bindlongpress="onResetTheme">
+        <view class="theme-toggle-track">
+          <view class="theme-toggle-knob"></view>
+        </view>
+        <text class="theme-toggle-txt">{{themeLabel}}</text>
+      </view>
+    </view>
+
+    <!-- ② 搜索独占一行 + 右侧筛选入口 -->
+    <view class="search-row">
+      <view class="search-bar">
+        <view class="ico ico-search search-bar-ico"></view>
+        <input class="search-bar-input" placeholder="搜索送达地址 / 备注" placeholder-class="placeholder"
+               value="{{keyword}}" bindinput="onKeywordInput" confirm-type="search" bindconfirm="onSearch" />
+        <view class="search-bar-clear" wx:if="{{keyword}}" catchtap="clearKeyword">
+          <view class="ico ico-close"></view>
+        </view>
+      </view>
+      <view class="filter-entry {{filterActive ? 'filter-entry-on' : ''}}" hover-class="filter-entry-hover"
+            hover-stay-time="60" bindtap="openFilter">
+        <view class="ico ico-filter filter-entry-ico"></view>
+        <text class="filter-entry-txt">筛选</text>
+        <view class="filter-dot" wx:if="{{filterActive}}"></view>
+      </view>
+    </view>
+
+    <!-- 公告（管理员在后台发布，全部用户可见）：
+         跑马灯 = 横向滚动播报；通知条 = 可关闭的横幅（关掉后本次会话不再出现） -->
+    <notice-bar mode="marquee" />
+    <notice-bar />
+  </view>
+
+  <!-- 顶部固定区 · 之二：进行中任务牌堆（同样不滚动）
+       为什么一定要放在滚动区之外：
+       scroll-view 的 refresher 是组件级原生手势，refresher-enabled 在手指按下的那一刻就被锁定，
+       catchtouchstart / catchtouchmove 都拦不住（实测过）。
+       唯一确定性做法就是让「滑卡片」和「下拉刷新」分属两个互不相干的容器：
+       牌堆留在固定头部，滚动区里只放会滚动的内容，两者永远不抢手势。 -->
+  <!-- ③ 未完成任务堆叠卡：所有「待接单 / 进行中 / 待确认」的单都在这里，像一摞牌叠着 -->
+  <!--    交互是「滑动即切换」：在牌堆上向上或向下轻轻一滑松手，
+            最上层那张就自动沿手势方向飞到最后一层，身后的卡片同时补位前移；
+            上滑 → 下一张补位到顶层；下滑 → 上一张补位到顶层，来回滑可以原路切回。
+          按住不会拖动卡片（没有跟手位移），这块区域的手势由 catchtouchmove 接管，
+          竖向滑动不会带动页面滚动，也不会触发下拉刷新。 -->
+  <!-- 未完成任务堆叠卡：常显。没有任务时显示占位卡，
+       这样首屏结构稳定（金刚区不会忽上忽下），用户也随时知道「手里还有没有没完事的单」 -->
+  <view class="running-panel">
+    <!-- 牌堆的 touchstart / touchmove 一律用 catch：既不把竖向手势传给外面，
+         也让这块区域和滚动区彻底无关（它本来就已经不在 scroll-view 里了）。 -->
+    <view class="deck-stack" wx:if="{{runningTasks.length > 0}}"
+          bindtouchstart="onDeckTouchStart" catchtouchmove="onDeckTouchMove"
+          bindtouchend="onDeckTouchEnd" bindtouchcancel="onDeckTouchCancel">
+      <view wx:for="{{runningTasks}}" wx:key="key"
+            class="deck-card deck-card-{{item.pos}}{{item.id === flyId ? ' deck-card-fly-' + flyDir : ''}}{{item.hidden ? ' deck-card-hidden' : ''}}"
+            data-id="{{item.id}}" data-pos="{{item.pos}}"
+            hover-class="deck-card-press" hover-stay-time="60" bindtap="goRunning">
+        <!-- 头部：身份 / 任务类型 / 状态在左，酬金在右（单位小、数字大，一眼看到多少钱） -->
+        <view class="deck-head">
+          <view class="deck-chips">
+            <text class="deck-role">{{item.roleLabel}}</text>
+            <text class="deck-type">{{item.taskTypeText}}</text>
+            <text class="{{item.statusClass}}">{{item.statusText}}</text>
+          </view>
+          <view class="deck-reward">
+            <text class="deck-reward-label">酬金</text>
+            <text class="deck-reward-unit">¥</text>
+            <text class="deck-reward-num">{{item.rewardText}}</text>
+          </view>
+        </view>
+
+        <!-- 主信息：送达地址（卡片上最醒目的一行） -->
+        <view class="deck-addr">
+          <view class="deck-addr-dot"></view>
+          <text class="deck-addr-txt ellipsis">{{item.deliverAddress}}</text>
+        </view>
+
+        <!-- 限时倒计时条：满格 → 空；剩余 >50% 绿 / 20~50% 橙 / <20% 红 / 超时亮红。
+             待接单时保持满格灰蓝，避免卡片高度和视觉重量发生跳动。 -->
+        <view class="deck-bar">
+          <view class="deck-bar-track">
+            <view class="deck-bar-fill deck-bar-{{item.barClass}}" style="width:{{item.barPercent}}%"></view>
+          </view>
+          <text class="deck-bar-txt deck-bar-txt-{{item.barClass}}">{{item.barText}}</text>
+        </view>
+
+        <!-- 5 段进度：①已接单 ②已取货 ③已送达 ④待支付 ⑤完成；
+             被接单后最左侧出现接单人头像 +「已接单」小标 -->
+        <view class="deck-flow">
+          <view class="deck-flow-ava" wx:if="{{item.progressStep >= 1}}">
+            <text class="deck-flow-ava-tag">已接单</text>
+            <image class="deck-flow-ava-img" wx:if="{{item.takerAvatar}}" src="{{item.takerAvatar}}" mode="aspectFill"></image>
+            <view class="deck-flow-ava-img deck-flow-ava-ph" wx:else></view>
+          </view>
+          <view class="deck-steps">
+            <view class="deck-steps-line"></view>
+            <view class="deck-steps-line-on" style="width:{{item.flowPercent}}%"></view>
+            <view class="deck-step" wx:for="{{item.steps}}" wx:for-item="step" wx:key="key">
+              <view class="deck-step-dot deck-step-dot-{{step.state}}"></view>
+              <text class="deck-step-txt deck-step-txt-{{step.state}}">{{step.label}}</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- 底部两栏：订单号 / 当前进度，标签在上、值在下，左右对齐 -->
+        <view class="deck-foot">
+          <view class="deck-cell">
+            <text class="deck-cell-k">订单号</text>
+            <text class="deck-cell-v deck-cell-v-sm">{{item.orderNo || '—'}}</text>
+          </view>
+          <view class="deck-cell deck-cell-r">
+            <text class="deck-cell-k">任务进度</text>
+            <text class="deck-cell-v deck-cell-v-sm">{{item.progressText}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 无任务占位卡：与深色任务卡同一套配色 / 圆角 / 投影，
+         让「没有进行中的任务」也是一个明确状态，而不是一片空白 -->
+    <view class="deck-empty" wx:else>
+      <view class="deck-empty-title">暂无任务</view>
+      <view class="deck-empty-sub">你发布的和接到的任务都会出现在这里，进度一目了然</view>
+      <view class="deck-empty-btn" hover-class="deck-empty-btn-hover" hover-stay-time="60" bindtap="goPublish">发布任务</view>
+    </view>
+
+    <!-- 进度点 + 操作提示：只有一条任务时不显示，避免无意义干扰 -->
+    <view class="running-foot" wx:if="{{runningTasks.length > 1}}">
+      <view class="running-dots">
+        <view class="running-dot {{item.pos === 0 ? 'running-dot-on' : ''}}" wx:for="{{runningTasks}}" wx:key="id"></view>
+      </view>
+      <text class="running-hint">上下滑动切换 · {{deckIndex + 1}}/{{runningTasks.length}}</text>
+    </view>
+  </view>
+
+  <!--
+    ② 主体滚动区：整页内容（牌堆 / 金刚区 / 任务列表 / 落款）都在这里滚动，
+       下拉刷新（refresher）常开，且只在这个滚动区生效 —— 牌堆已经在它外面了，
+       所以「在牌堆上滑卡片」是纯手势切换，「在列表区下拉」才是刷新，两者物理隔离、永远不抢。
+       refresher-background 用页面底色 f5f7fa（即 app.wxss 里的背景色令牌值），指示器背景与页面一致。
+  -->
+  <scroll-view
+    class="hall-scroll"
+    scroll-y="{{true}}"
+    refresher-enabled="{{true}}"
+    refresher-triggered="{{refreshing}}"
+    refresher-background="{{refresherBg}}"
+    refresher-default-style="{{refresherStyle}}"
+    lower-threshold="150"
+    bindrefresherrefresh="onRefresherRefresh"
+    bindscrolltolower="onScrollToLower"
+  >
+    <!-- ④ 金刚区：四个常用下单入口 + 自定义发布 -->
+    <!-- 引导文案：新用户不知道这排图标能直接下单，用一行小字点明 -->
+    <view class="quick-hint">↓点击选择要发布的任务↓</view>
+    <view class="quick-grid">
+      <view class="quick-item" wx:for="{{quickEntries}}" wx:key="key" data-key="{{item.key}}"
+            hover-class="quick-item-hover" hover-stay-time="60" bindtap="goQuick">
+        <view class="quick-box quick-box-{{item.key}}">
+          <image class="quick-img" src="{{item.img}}" mode="aspectFit" />
+          <text class="quick-badge" wx:if="{{item.badge}}">{{item.badge}}</text>
+        </view>
+        <text class="quick-name">{{item.name}}</text>
+        <text class="quick-meta">{{item.meta}}</text>
+      </view>
+
+      <view class="quick-item" data-key="custom" hover-class="quick-item-hover" hover-stay-time="60" bindtap="goQuick">
+        <view class="quick-box quick-box-custom">
+          <view class="ico ico-plus quick-ico"></view>
+        </view>
+        <text class="quick-name">自定义发布</text>
+        <text class="quick-meta">任何跑腿需求</text>
+      </view>
+    </view>
+
+    <!-- ⑤ 任务列表 -->
+    <view class="list-head" wx:if="{{list.length > 0}}">
+      <text class="list-head-title">可接任务</text>
+      <text class="list-head-count">共 {{total}} 条</text>
+    </view>
+
+    <!-- 首屏加载骨架屏：loading 且暂无数据时展示，避免白屏 -->
+    <block wx:if="{{loading && list.length === 0}}">
+      <view class="card" wx:for="{{[1,2,3]}}" wx:key="*this">
+        <view class="skeleton-head">
+          <view class="skeleton skeleton-avatar"></view>
+          <view class="skeleton skeleton-head-line"></view>
+        </view>
+        <view class="skeleton skeleton-line"></view>
+        <view class="skeleton skeleton-line"></view>
+        <view class="skeleton skeleton-line" style="width:45%"></view>
+      </view>
+    </block>
+
+    <task-card wx:for="{{list}}" wx:key="id" task="{{item}}" mode="hall" />
+
+    <!-- 空状态：用 CSS 绘制的图形做插画，避免额外图片资源 -->
+    <view class="empty" wx:if="{{!loading && list.length === 0}}">
+      <view class="empty-title">暂无任务</view>
+      <view class="empty-sub">点上方「取快递 / 食堂带饭」快速发布你的第一单</view>
+    </view>
+
+    <view class="sub loading-more" wx:if="{{list.length > 0}}">
+      {{hasMore ? '上拉加载更多' : '没有更多了'}}
+    </view>
+
+    <page-footer />
+    <view class="safe-bottom"></view>
+  </scroll-view>
+</view>
+
+<!-- ⑥ 排序与筛选：底部 Sheet（首屏高度全部让给任务列表） -->
+<view class="sheet-mask {{themeClass}} {{filterSheet ? 'sheet-mask-on' : ''}}" bindtap="closeFilter"></view>
+<view class="sheet {{themeClass}} {{filterSheet ? 'sheet-on' : ''}}">
+  <view class="sheet-head">
+    <text class="sheet-title">排序与筛选</text>
+    <view class="sheet-close" hover-class="sheet-close-hover" hover-stay-time="60" bindtap="closeFilter">
+      <view class="ico ico-close"></view>
+    </view>
+  </view>
+
+  <view class="sheet-label">排序方式</view>
+  <view class="sheet-chips">
+    <view wx:for="{{sortOptions}}" wx:key="value"
+          class="sheet-chip {{sort === item.value ? 'sheet-chip-on' : ''}}"
+          data-value="{{item.value}}" bindtap="onSortChange">{{item.label}}</view>
+  </view>
+
+  <view class="sheet-label">酬金区间（元）</view>
+  <view class="sheet-range">
+    <input class="sheet-input" type="digit" placeholder="最低" placeholder-class="placeholder"
+           value="{{minReward}}" data-field="minReward" bindinput="onRewardInput" />
+    <text class="sheet-sep">-</text>
+    <input class="sheet-input" type="digit" placeholder="最高" placeholder-class="placeholder"
+           value="{{maxReward}}" data-field="maxReward" bindinput="onRewardInput" />
+  </view>
+
+  <view class="sheet-foot">
+    <view class="btn btn-plain sheet-btn" bindtap="resetFilter">重置</view>
+    <view class="btn btn-primary sheet-btn" bindtap="applyFilter">确定</view>
+  </view>
+</view>

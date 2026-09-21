@@ -1,0 +1,67 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/myPublish/myPublish",
+    "pages/myTake/myTake",
+    "pages/profile/profile",
+    "pages/login/login",
+    "pages/register/register",
+    "pages/forgot/forgot",
+    "pages/publishTask/publishTask",
+    "pages/taskDetail/taskDetail",
+    "pages/taskEdit/taskEdit",
+    "pages/message/message",
+    "pages/messageDetail/messageDetail",
+    "pages/campusCert/campusCert",
+    "pages/auditApply/auditApply",
+    "pages/appeal/appeal",
+    "pages/bill/bill",
+    "pages/securitySetup/securitySetup",
+    "pages/securityUnlock/securityUnlock",
+    "pages/devices/devices",
+    "pages/admin/admin"
+  ],
+  "window": {
+    "backgroundTextStyle": "@bgTxtStyle",
+    "navigationBarBackgroundColor": "@navBgColor",
+    "navigationBarTitleText": "校园跑腿",
+    "navigationBarTextStyle": "@navTxtStyle",
+    "backgroundColor": "@bgColor"
+  },
+  "tabBar": {
+    "color": "@tabColor",
+    "selectedColor": "@tabSelColor",
+    "backgroundColor": "@tabBgColor",
+    "borderStyle": "@tabBorderStyle",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "@tabIconHome",
+        "selectedIconPath": "@tabIconHomeActive"
+      },
+      {
+        "pagePath": "pages/myPublish/myPublish",
+        "text": "我的发布",
+        "iconPath": "@tabIconPublish",
+        "selectedIconPath": "@tabIconPublishActive"
+      },
+      {
+        "pagePath": "pages/myTake/myTake",
+        "text": "我的任务",
+        "iconPath": "@tabIconTask",
+        "selectedIconPath": "@tabIconTaskActive"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的",
+        "iconPath": "@tabIconProfile",
+        "selectedIconPath": "@tabIconProfileActive"
+      }
+    ]
+  },
+  "darkmode": true,
+  "themeLocation": "theme.json",
+  "sitemapLocation": "sitemap.json",
+  "style": "v2"
+}

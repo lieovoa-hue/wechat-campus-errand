@@ -1,0 +1,130 @@
+<view class="container {{themeClass}} theme-root">
+  <!-- 全局通知条：管理员发布的公告，可关闭（本次会话内不再出现） -->
+  <notice-bar />
+  <!-- 统一确认弹窗（自绘，深色自适应）：由 utils/dialog.js 通过 selectComponent 调用 -->
+  <confirm-dialog id="confirmDialog" />
+  <!-- 状态筛选 -->
+  <scroll-view class="tab-scroll" scroll-x enable-flex>
+    <view wx:for="{{statusTabs}}" wx:key="label"
+          class="tab-item {{activeStatus === item.value ? 'tab-active' : ''}}"
+          data-value="{{item.value}}" bindtap="onTabChange">{{item.label}}</view>
+  </scroll-view>
+
+  <!-- 状态分组列表 -->
+  <block wx:for="{{groups}}" wx:key="status" wx:for-item="group">
+    <view class="group-head">
+      <text class="group-title">{{group.statusText}}</text>
+      <text class="sub">共 {{group.count}} 条</text>
+    </view>
+
+    <view class="card task-card task-card-s{{task.status}}" wx:for="{{group.list}}" wx:key="id" wx:for-item="task" bindtap="goDetail" data-id="{{task.id}}">
+      <view class="row-between">
+        <view class="task-addr ellipsis">{{task.deliverAddress}}</view>
+        <view class="tag-group">
+          <!-- 未送达申诉角标：红色，提醒该任务已停止自动确认收货 -->
+          <view class="tag tag-danger" wx:if="{{task.isDisputed}}">已申诉</view>
+          <!-- 超时送达角标：跑腿员超过限时才送达，雇主可进详情页扣减酬金 -->
+          <view class="tag tag-danger"
+                wx:if="{{task.isLateDelivery && task.status === 2 && !task.isLateRewardDeducted}}">超时送达</view>
+          <!-- 已超时角标：任务仍在进行中但已超过限时（酬金已自动扣减，任务不取消） -->
+          <view class="tag tag-danger" wx:if="{{task.isOvertime && task.status === 1}}">已超时</view>
+          <view class="{{task.statusClass}}">{{task.statusText}}</view>
+        </view>
+      </view>
+
+      <!-- 雇主（我）：头像 / 昵称 / 账号ID / 学号 / 认证标识 -->
+      <view class="person-row" wx:if="{{task.ownerPerson}}">
+        <image wx:if="{{task.ownerPerson.avatarUrl}}" class="person-avatar" src="{{task.ownerPerson.avatarUrl}}" mode="aspectFill"
+               catchtap="previewAvatar" data-url="{{task.ownerPerson.avatarUrl}}" />
+        <view wx:else class="person-avatar person-avatar-placeholder">跑</view>
+        <view class="flex-1 person-info">
+          <view class="row">
+            <text class="person-role">{{task.ownerPerson.label}}</text>
+            <text class="person-name ellipsis">{{task.ownerPerson.nickname}}</text>
+            <text class="{{task.ownerPerson.badgeClass}}" wx:if="{{task.ownerPerson.badgeShow}}">{{task.ownerPerson.badgeText}}</text>
+          </view>
+          <view class="sub">ID：{{task.ownerPerson.userIdText}}　学号：{{task.ownerPerson.studentId}}</view>
+        </view>
+      </view>
+
+      <!-- 跑腿员：头像 / 昵称 / 账号ID / 学号 / 认证标识（无人接单时不展示） -->
+      <view class="person-row" wx:if="{{task.takerPerson}}">
+        <image wx:if="{{task.takerPerson.avatarUrl}}" class="person-avatar" src="{{task.takerPerson.avatarUrl}}" mode="aspectFill"
+               catchtap="previewAvatar" data-url="{{task.takerPerson.avatarUrl}}" />
+        <view wx:else class="person-avatar person-avatar-placeholder">跑</view>
+        <view class="flex-1 person-info">
+          <view class="row">
+            <text class="person-role">{{task.takerPerson.label}}</text>
+            <text class="person-name ellipsis">{{task.takerPerson.nickname}}</text>
+            <text class="{{task.takerPerson.badgeClass}}" wx:if="{{task.takerPerson.badgeShow}}">{{task.takerPerson.badgeText}}</text>
+          </view>
+          <view class="sub">ID：{{task.takerPerson.userIdText}}　学号：{{task.takerPerson.studentId}}</view>
+        </view>
+      </view>
+
+      <!-- 任务信息：送达地址 / 限时 / 跑腿费 -->
+      <view class="info-line">
+        <text class="info-k">任务编号</text>
+        <text class="info-v">#{{task.id}}</text>
+      </view>
+      <view class="info-line">
+        <text class="info-k">限时</text>
+        <text class="info-v">{{task.limitText}}</text>
+      </view>
+      <!-- 限时倒计时：进行中且设置了限时才有值，倒计时归零后提示已超时 -->
+      <view class="info-line" wx:if="{{task.remainSeconds !== null}}">
+        <text class="info-k">{{countdownLabel}}</text>
+        <text class="info-v {{task.countdownOver ? 'danger' : 'countdown'}}">{{task.countdownOver ? countdownOverText : task.remainText}}</text>
+      </view>
+      <view class="info-line">
+        <text class="info-k">跑腿费</text>
+        <text class="info-v price">¥{{task.rewardText}}</text>
+      </view>
+      <view class="info-line" wx:if="{{task.remark}}">
+        <text class="info-k">备注</text>
+        <text class="info-v">{{task.remark}}</text>
+      </view>
+
+      <view class="row-between foot">
+        <text class="sub">收件人：{{task.receiverName}}</text>
+        <text class="sub">{{task.publishTimeText}}发布</text>
+      </view>
+
+      <!-- 操作区（catchtap 阻止冒泡到卡片） -->
+      <view class="btn-row">
+        <button class="btn btn-primary btn-sm" wx:if="{{task.payStatus === 0}}"
+                catchtap="repay" data-id="{{task.id}}">继续支付</button>
+        <button class="btn btn-plain btn-sm" wx:if="{{task.status === 0 && task.payStatus !== 0}}"
+                catchtap="goEdit" data-id="{{task.id}}">编辑</button>
+        <button class="btn btn-danger btn-sm" wx:if="{{task.status === 0 && task.payStatus !== 0}}"
+                catchtap="cancelTask" data-id="{{task.id}}">撤销</button>
+        <button class="btn btn-plain btn-sm" wx:if="{{task.status === 1 && task.actions.canAdjustReward}}"
+                catchtap="goEdit" data-id="{{task.id}}">加酬金</button>
+        <button class="btn btn-plain btn-sm" wx:if="{{task.status === 2}}"
+                catchtap="goDetail" data-id="{{task.id}}">去确认送达</button>
+        <button class="btn btn-primary btn-sm" wx:if="{{task.status === 5 && !task.isRefunded && task.actions.canApplyRefund}}"
+                catchtap="applyRefund" data-id="{{task.id}}">申请退券</button>
+      </view>
+      <view class="sub" wx:if="{{task.isRefunded}}">该任务已退券完成，发布券已返还到您的账号</view>
+      <view class="sub" wx:elif="{{task.status === 5 && task.actions.refundDisabledReason}}">{{task.actions.refundDisabledReason}}</view>
+      <!-- 未送达申诉提示：该任务已退出「超2小时自动确认收货」判定 -->
+      <view class="sub danger" wx:if="{{task.isDisputed}}">已反馈未送达：{{task.disputeReason}}（系统已停止自动确认收货）</view>
+      <!-- 超时送达提示：可进详情页按规则扣减酬金 -->
+      <view class="sub danger"
+            wx:if="{{task.isLateDelivery && task.status === 2 && !task.isLateRewardDeducted}}">
+        跑腿员超时送达，可进详情页按规则扣减酬金
+      </view>
+      <!-- 进行中已超时：酬金已自动扣减，任务不取消，跑腿员仍可继续送达 -->
+      <view class="sub danger" wx:if="{{task.isOvertime && task.status === 1}}">
+        跑腿员已超时，系统已自动扣减酬金 ¥{{task.lateDeductAmount}}（酬金的5%，不足0.5元按0.5元），当前酬金 ¥{{task.rewardText}}；任务不会取消，跑腿员仍可继续送达。
+      </view>
+    </view>
+  </block>
+
+  <view class="empty" wx:if="{{groups.length === 0 && !loading}}">
+    <view>还没有发布过任务</view>
+    <view class="sub" style="margin-top:12rpx">去首页看看，或点击右下角发布任务</view>
+  </view>
+  <page-footer />
+  <view class="safe-bottom"></view>
+</view>

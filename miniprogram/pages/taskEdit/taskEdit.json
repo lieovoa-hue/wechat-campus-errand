@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "编辑任务",
+  "usingComponents": {
+    "page-footer": "/components/pageFooter/pageFooter",
+    "notice-bar": "/components/noticeBar/noticeBar"
+  }
+}

@@ -1,0 +1,33 @@
+<!-- 我的设备管理：常用设备免密保，新设备必须答密保 -->
+<view class="container {{themeClass}} theme-root">
+  <!-- 全局通知条：管理员发布的公告，可关闭（本次会话内不再出现） -->
+  <notice-bar />
+  <!-- 统一确认弹窗（自绘，深色自适应）：由 utils/dialog.js 通过 selectComponent 调用 -->
+  <confirm-dialog id="confirmDialog" />
+
+  <view class="card">
+    <view class="title">我的设备</view>
+    <view class="sub">在常用设备上登录无需验证；换设备登录时必须回答密保问题。</view>
+    <view class="tips">至少保留一台设备，否则每次登录都需要完成密保验证。</view>
+  </view>
+
+  <view class="card" wx:if="{{list.length}}">
+    <view class="device-row {{item.isCurrent ? 'device-row-current' : ''}}" wx:for="{{list}}" wx:key="id">
+      <view class="flex-1">
+        <view class="person-name">
+          {{item.deviceName}}
+          <text class="tag tag-success" wx:if="{{item.isCurrent}}">本机</text>
+        </view>
+        <view class="sub">登录地点：{{item.locationText}}</view>
+        <view class="sub">最近登录：{{item.lastLoginText}}</view>
+      </view>
+      <view class="btn btn-sm {{item.isCurrent ? 'btn-disabled' : 'btn-plain'}}"
+            data-id="{{item.id}}" data-name="{{item.deviceName}}" data-current="{{item.isCurrent}}"
+            bindtap="unbind">解绑</view>
+    </view>
+  </view>
+
+  <view class="card empty" wx:elif="{{!loading}}">暂无已绑定设备</view>
+
+  <page-footer />
+</view>

@@ -1,0 +1,25 @@
+<!-- =====================================================================
+     公告组件
+     · mode="bar"     页面顶部通知条（可关闭，多条时显示 1/2 计数）
+     · mode="marquee" 首页跑马灯（横向滚动，点一下看下一条）
+     颜色全部走主题令牌，深色模式下自动跟随（CSS 变量可跨组件继承）。
+     ===================================================================== -->
+
+<!-- 顶部通知条 -->
+<view class="nb-bar" wx:if="{{mode === 'bar' && barVisible}}">
+  <view class="nb-bar-badge">通知</view>
+  <view class="nb-bar-text">{{barContent}}</view>
+  <view class="nb-bar-count" wx:if="{{barTotal > 1}}">{{barIndex}}/{{barTotal}}</view>
+  <view class="nb-bar-close" wx:if="{{barClosable}}" catchtap="closeNotice">
+    <view class="ico ico-close nb-bar-close-ico"></view>
+  </view>
+</view>
+
+<!-- 首页跑马灯 -->
+<view class="nb-marquee" wx:if="{{mode === 'marquee' && marqueeItems.length}}" catchtap="nextMarquee">
+  <view class="nb-marquee-label">{{label}}</view>
+  <view class="nb-marquee-track">
+    <view class="nb-marquee-text" wx:if="{{marqueeShow}}"
+          style="animation-duration: {{marqueeDuration}}s">{{marqueeContent}}</view>
+  </view>
+</view>
