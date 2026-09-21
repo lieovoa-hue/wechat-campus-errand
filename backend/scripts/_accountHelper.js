@@ -104,7 +104,7 @@ function ensureTestImagesDeep(value, depth) {
  */
 function resolveLogFile() {
   if (process.env.BACKEND_LOG) return process.env.BACKEND_LOG;
-  const logDir = 'D:/miniprogram123/backend/logs';
+  const logDir = path.resolve(__dirname, '..', 'logs');
   try {
     const newest = fs
       .readdirSync(logDir)
@@ -118,7 +118,7 @@ function resolveLogFile() {
   } catch (err) {
     // 目录不存在（例如仍是旧部署）则回退到旧路径
   }
-  return 'D:/miniprogram123/backend/server.out.log';
+  return path.resolve(__dirname, '..', 'server.out.log');
 }
 /** 测试账号统一密码：满足「8-20 位且同时包含字母和数字」的强度要求 */
 const DEFAULT_PASSWORD = process.env.TEST_PASSWORD || 'abc123456';

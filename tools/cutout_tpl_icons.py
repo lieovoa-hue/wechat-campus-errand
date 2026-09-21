@@ -14,19 +14,22 @@ import os
 import numpy as np
 from PIL import Image, ImageFilter
 
+# 原素材为本机临时截图，不随仓库分发；把同名源图放进与本脚本同级的 tpl-src/ 即可复现
+_HERE = os.path.dirname(os.path.abspath(__file__))
+SRC_DIR = os.path.join(_HERE, "tpl-src")
 SRC = {
-    "express": (r"C:\Users\liqiud\AppData\Local\Temp\codex-clipboard-e965bb1f-b329-4de8-8074-2e6f55748a60.png",
+    "express": (os.path.join(SRC_DIR, "express.png"),
                 (535, 510, 1617, 1480), None, 0.15),
-    "meal":    (r"C:\Users\liqiud\AppData\Local\Temp\codex-clipboard-a0af4ed8-897a-4825-8fc4-da97f4323221.png",
+    "meal":    (os.path.join(SRC_DIR, "meal.png"),
                 (500, 508, 1580, 1420), None, 0.0),
-    "print":   (r"C:\Users\liqiud\AppData\Local\Temp\codex-clipboard-84c4d2b4-1435-454a-b525-c2952c4d3992.png",
+    "print":   (os.path.join(SRC_DIR, "print.png"),
                 (440, 300, 1620, 1620), [(215, 725), (478, 795), (335, 1195), (70, 1050)], 0.0),
-    "market":  (r"C:\Users\liqiud\AppData\Local\Temp\codex-clipboard-44f9db46-bc4f-4ee5-887e-93a54fc011e5.png",
+    "market":  (os.path.join(SRC_DIR, "market.png"),
                 (403, 420, 1563, 1545), None, 0.15),
 }
 TOL = 30            # 常规背景阈值（与纯白的曼哈顿距离）
 SHADOW_TOL = 165    # 底部投影带内的放宽阈值：投影是柔和浅色，整块清掉
-OUT_DIR = r"D:\miniprogram123\miniprogram\images\tpl"
+OUT_DIR = os.path.join(_HERE, "..", "miniprogram", "images", "tpl")
 SIZE = 320
 
 

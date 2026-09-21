@@ -49,7 +49,7 @@ const { log } = require('./common');
 
 /** backend 目录 */
 const BACKEND_DIR = path.resolve(__dirname, '../..');
-/** 项目根目录（D:\miniprogram123） */
+/** 项目根目录（仓库根） */
 const PROJECT_ROOT = path.resolve(BACKEND_DIR, '..');
 /** 上传目录 */
 const UPLOAD_DIR = path.resolve(BACKEND_DIR, 'uploads');

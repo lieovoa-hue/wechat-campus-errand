@@ -245,7 +245,9 @@ const ADMIN_PASSWORD = process.env.TEST_ADMIN_PASSWORD || process.env.INIT_ADMIN
     results.filter((r) => !r.pass).forEach((r) => console.log('  - ' + r.name + ' -> ' + r.detail));
   }
   // 把测试账号ID写出来，方便测试结束后清理
-  fs.writeFileSync('D:/miniprogram123/logs/_e2e_account.txt', accountNo, 'utf8');
+  const e2eDir = require('path').resolve(__dirname, '..', '..', 'logs');
+  fs.mkdirSync(e2eDir, { recursive: true });
+  fs.writeFileSync(require('path').join(e2eDir, '_e2e_account.txt'), accountNo, 'utf8');
 
   // 收尾：自动清理本次注册的测试账号（避免每跑一次就在库里留一条注册记录）
   try {

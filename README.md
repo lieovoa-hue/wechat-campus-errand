@@ -42,7 +42,7 @@ routes 路由层  ->  controllers 控制器层  ->  models 数据访问层  ->  
 ### 1.3 目录结构
 
 ```
-D:\miniprogram123
+<项目根目录>
 ├── backend
 │   ├── .env / .env.example        环境变量
 │   ├── package.json
@@ -144,7 +144,7 @@ FLUSH PRIVILEGES;
 ### 2.3 导入数据库（9 张表）
 
 ```powershell
-cd D:\miniprogram123\backend
+cd <项目根目录>\backend
 
 # 1) 建库（字符集必须是 utf8mb4）
 mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS campus_errand DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;"
@@ -161,7 +161,7 @@ mysql -u root -p -e "USE campus_errand; SHOW TABLES;"
 ### 2.4 安装后端依赖
 
 ```powershell
-cd D:\miniprogram123\backend
+cd <项目根目录>\backend
 npm install
 ```
 
@@ -227,7 +227,7 @@ npm install
 ### 4.1 启动服务
 
 ```powershell
-cd D:\miniprogram123\backend
+cd <项目根目录>\backend
 
 # 前台启动（Ctrl+C 停止）
 npm start
@@ -237,7 +237,7 @@ npm start
 后台启动（不占用当前终端）：
 
 ```powershell
-Start-Process -FilePath 'node' -ArgumentList 'src/app.js' -WorkingDirectory 'D:\miniprogram123\backend' -WindowStyle Hidden
+Start-Process -FilePath 'node' -ArgumentList 'src/app.js' -WorkingDirectory '<项目根目录>\backend' -WindowStyle Hidden
 ```
 
 启动成功日志：
@@ -259,7 +259,7 @@ curl http://127.0.0.1:3000/api/health
 ### 4.2 端到端自检（强烈建议首次部署后执行）
 
 ```powershell
-cd D:\miniprogram123\backend
+cd <项目根目录>\backend
 
 # 0) 模块加载 + 纯函数断言
 node scripts\checkAll.js
@@ -416,7 +416,7 @@ node scripts\initAdmin.js
 手动执行 / 预览（建议先空跑看一遍清单）：
 
 ```powershell
-cd D:\miniprogram123\backend
+cd <项目根目录>\backend
 node scripts\cleanGarbage.js --dry-run --list   # 只统计并列出待回收文件，不做任何改动
 node scripts\cleanGarbage.js --apply            # 按 .env 配置真正执行一轮
 node scripts\cleanGarbage.js --days=3 --list    # 临时把「孤立图片保留期」改成 3 天
@@ -433,7 +433,7 @@ node scripts\cleanGarbage.js --days=3 --list    # 临时把「孤立图片保留
 
 1. 下载安装「微信开发者工具」（稳定版）：<https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html>
 2. 打开工具 -> **导入项目**
-   - 目录：`D:\miniprogram123\miniprogram`
+   - 目录：`<项目根目录>\miniprogram`
    - AppID：填自己的小程序 AppID（`project.config.json` 中当前为 `wx0000000000000000`，请替换为本人 AppID；纯本地调试可选用「测试号」）
 3. 若提示域名不合法：**详情 -> 本地设置 -> 勾选「不校验合法域名、web-view（业务域名）、TLS 版本以及 HTTPS 证书」**
    （`project.config.json` 中已默认 `"urlCheck": false`）
@@ -925,7 +925,7 @@ const UNDELIVERED_TAG_OTHER = 4;
 **账号体系相关回归脚本**
 
 ```powershell
-cd D:\miniprogram123\backend
+cd <项目根目录>\backend
 node scripts\regression-account-security.js   # 26 项：注册 / 密保 / 换设备解锁 / 密保找回密码
 node scripts\regression-admin-login.js        # 26 项：管理员与登录通道 + 管理员订单管理（搜索/编辑/删除/越权）
 node scripts\regression-business-flow.js      # 102 项：业务全流程（含账号体系相关校验）
@@ -1209,7 +1209,7 @@ sudo mkdir -p /var/www/campus-errand
 sudo chown -R $USER:$USER /var/www/campus-errand
 
 # 本地 Windows 执行（Git Bash / PowerShell 均可）
-scp -r D:\miniprogram123\backend  root@服务器IP:/var/www/campus-errand/
+scp -r <项目根目录>\backend  root@服务器IP:/var/www/campus-errand/
 # 或使用 git 拉取
 ```
 
@@ -1673,7 +1673,7 @@ node scripts/scheduleTest.js                 # 定时任务 47 项
 把测试期间造出来的账号、任务、订单、消息、举报、公告一次性清掉，只留管理员账号：
 
 ```powershell
-cd D:\miniprogram123\backend
+cd <项目根目录>\backend
 node scripts\backupDb.js                  # 1) 先备份（强烈建议）
 node scripts\cleanForLaunch.js --dry-run  # 2) 先看清要删多少条（不落库）
 node scripts\cleanForLaunch.js            # 3) 真正执行
@@ -1688,7 +1688,7 @@ node scripts\cleanForLaunch.js            # 3) 真正执行
 
 ```powershell
 # 清空测试图片（保留目录结构，上线后用户上传会重新写入）
-Get-ChildItem D:\miniprogram123\backend\uploads -Recurse -File | Remove-Item -Force
+Get-ChildItem <项目根目录>\backend\uploads -Recurse -File | Remove-Item -Force
 ```
 
 > - 想保留的管理员学号不是 `你的管理员学号`：改 `.env` 的 `KEEP_ADMIN_STUDENT_ID` 再执行；

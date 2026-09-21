@@ -204,7 +204,7 @@ const ADMIN_PASSWORD = process.env.TEST_ADMIN_PASSWORD || process.env.INIT_ADMIN
   await h.purgeAccounts([probe.accountNo]);
 
   // 清理联调测试账号
-  const accountNo = fs.readFileSync('D:/miniprogram123/logs/_e2e_account.txt', 'utf8').trim();
+  const accountNo = fs.readFileSync(require('path').resolve(__dirname, '..', '..', 'logs', '_e2e_account.txt'), 'utf8').trim();
   const conn = await mysql.createConnection({
     host: process.env.DB_HOST, port: process.env.DB_PORT, user: process.env.DB_USER,
     password: process.env.DB_PASSWORD, database: process.env.DB_NAME

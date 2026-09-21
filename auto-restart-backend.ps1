@@ -8,7 +8,7 @@
    2) 自动获取 cpolar 当前公网地址，并写入小程序
       miniprogram/utils/request.js 的 BASE_URL（写入前自动备份 .bak）
    3) MySQL80 服务未启动时自动尝试启动
-   4) 运行日志写入 D:\miniprogram123\logs\
+   4) 运行日志写入 脚本所在目录\logs\
 
  用法：
    双击「启动后端守护.bat」                    -> 前台可见窗口，Ctrl+C 停止
@@ -16,7 +16,7 @@
    ... -CpolarUrl https://xxx.cpolar.top       -> 指定 cpolar 地址并立即写入小程序
 
  cpolar 地址从哪里自动获取？（按顺序尝试，每个都会先请求 <地址>/api/health 验证）
-   1. D:\miniprogram123\cpolar-url.txt 里手动填写的地址（最稳，推荐）
+   1. 脚本所在目录\cpolar-url.txt 里手动填写的地址（最稳，推荐）
    2. 小程序 request.js 里当前已配置的地址（能用就不改）
    3. cpolar 日志（%USERPROFILE%\.cpolar\logs）里最近出现过的 https://xxx.cpolar.top
    全部失败时：打开 http://localhost:9200（Cpolar Web UI）→ 隧道管理，

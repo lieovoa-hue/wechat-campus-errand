@@ -3,7 +3,9 @@
 # 由 Codex 在排查「后端断了」时使用；也可以自己右键「以管理员身份运行」
 # =====================================================================
 $ErrorActionPreference = 'Continue'
-$log = 'D:\miniprogram123\logs\mysql-start.log'
+$logDir = Join-Path $PSScriptRoot '..\logs'
+if (-not (Test-Path $logDir)) { New-Item -ItemType Directory -Path $logDir -Force | Out-Null }
+$log = Join-Path $logDir 'mysql-start.log'
 function W($t) { "$t" | Out-File -FilePath $log -Append -Encoding utf8 }
 "=== $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') 开始修复 MySQL80 ===" | Out-File -FilePath $log -Encoding utf8
 
